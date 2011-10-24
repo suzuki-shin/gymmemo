@@ -4,8 +4,6 @@ DEVELOPER_MAIL = "shinichiro.su@gmail.com"
 
 import os
 # import pickle
-from datetime import datetime
-from time import strptime
 from google.appengine.ext.webapp import template
 from google.appengine.api import users
 from google.appengine.ext import webapp
@@ -62,13 +60,7 @@ class ViewTrainningAction(webapp.RequestHandler):
         if not user:
             self.redirect(users.create_login_url(self.request.uri))
 
-        created = self.request.get('created')
-        logging.info(created)
-        trainnings = Trainning.all().filter('user =', user)
-        trainnings.filter('created >=', datetime(*strptime(created + ' 00:00:00', '%Y-%m-%d %H:%M:%S')[0:6]))
-        trainnings.filter('created <=', datetime(*strptime(created + ' 23:59:59', '%Y-%m-%d %H:%M:%S')[0:6]))
-        trainnings.filter('status =', True)
-
+        trainnings = Trainning.get_list_at(user, self.request.get('created'))
         path = os.path.join(os.path.dirname(__file__), 'view.html')
         self.response.out.write(template.render(path, {'trainnings': trainnings}))
 
