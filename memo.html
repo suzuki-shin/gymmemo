@@ -1,0 +1,31 @@
+<html>
+  {% include "header.html" %}
+  <body>
+	<div id="container">
+	  <div id="header">
+		<h1><a href="/">GYMMEMO</a></h1>
+	  </div>
+	  <div id="content">
+		<table>
+		  <tr>
+			<th>日時</th>
+			<th>体重</th>
+			<th>体脂肪率</th>
+			<th>筋トレ</th>
+			<th>有酸素運動</th>
+		  </tr>
+		  {% for t in trainings %}
+		  <tr>
+			<td>{{ t.created|date:"y/m/d H:i" }}</td>
+			<td>{{ t.weight }} kg</td>
+			<td>{{ t.fat }} %</td>
+			<td>{{ t.muscle }} 分</td>
+			<td>{{ t.aerobic  }} 分</td>
+		  </tr>
+		{% endfor %}
+		</table>
+	  </div>
+	  {% include "footer.html" %}
+	</div>
+  </body>
+</html>

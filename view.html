@@ -1,0 +1,16 @@
+<html>
+  {% include "header.html" %}
+  <body>
+	<div id="container">
+	  <div id="header">
+		<h1><a href="/">GYMMEMO</a></h1>
+	  </div>
+	  <div id="content">
+		  {% for t in trainnings %}
+		  {{ t.item.name }}　{{ t.value }}{{ t.item.unit_name }} {{ t.created }}<br />
+		  {% endfor %}
+	  </div>
+	</div>
+	{% include "footer.html" %}
+  </body>
+</html>
