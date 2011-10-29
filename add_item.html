@@ -8,7 +8,12 @@
 	  <div id="content">
 		<form action="/add_item" method="post">
 		  トレーニング種目<input type="text" name="name" value="" size="30" /><br />
-		  単位<input type="text" name="unit_name" value="" size="5" /><br />
+		  単位
+		  <select name="unit">
+			{% for u in disps.unit %}
+			<option value="{{ u }}">{{ u }}</option>
+			{% endfor %}
+		  </select><br />
 		  <input type="submit" value="追加する" />
 		</form>
 	  </div>

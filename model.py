@@ -27,8 +27,9 @@ class Item(db.Model):
     status    = db.BooleanProperty(default=True)
     created   = db.DateTimeProperty(auto_now_add=True)
     user      = db.UserProperty(required=True)
-    name      = db.TextProperty(required=True) # 種目名
-    unit_name = db.TextProperty(required=True) # 単位名
+    name    = db.TextProperty(required=True) # 種目名
+    unit    = db.TextProperty(required=True) # 負荷単位名
+    display = {'unit': (u'なし', u'kg', u'分')}
 
 class Trainning(db.Model):
     u"""トレーニング記録
@@ -37,7 +38,7 @@ class Trainning(db.Model):
     created = db.DateTimeProperty(auto_now_add=True)
     user    = db.UserProperty(required=True)
     item    = db.ReferenceProperty(Item, required=True)
-    value   = db.IntegerProperty(required=True)
+    value   = db.IntegerProperty()
 
     @classmethod
     def get_days(cls, user):

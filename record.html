@@ -8,7 +8,8 @@
 	  <div id="content">
 		<form action="/" method="post">
 		  {% for item in items %}
-		  {{ item.name }}<input type="text" name="{{ item.key }}" value="" size="5" />{{ item.unit_name }}<br />
+		  {{ item.name }}
+		  <input type="text" name="{{ item.key }}" value="" size="5" />{{ item.unit }}<br />
 		  {% endfor %}
 		  <input type="submit" value="記録する" />
 		</form>

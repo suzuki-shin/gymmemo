@@ -25,21 +25,22 @@ class RecordTrainningAction(webapp.RequestHandler):
 
         items = Item.all().filter('status =', True).filter('user =', user).fetch(100)
         path = os.path.join(os.path.dirname(__file__), 'record.html')
-        self.response.out.write(template.render(path, {'items': items}))
+        self.response.out.write(template.render(path, {'items': items, 'disps':Item.display}))
 
     def post(self):
         user = users.get_current_user()
         if not user:
             self.redirect(users.create_login_url(self.request.uri))
 
+        # logging.info(self.request.POST.items())
         for key, value in self.request.POST.items():
             if not (key and value): continue
 
             item = Item.get(key)
             trainning = Trainning(
-                user = user,
-                item = item,
-                value = int(value),
+                user   = user,
+                item   = item,
+                value  = int(value),
             )
             trainning.put()
         self.redirect('/')
@@ -75,26 +76,6 @@ class SetConfigAction(webapp.RequestHandler):
         path = os.path.join(os.path.dirname(__file__), 'config.html')
         self.response.out.write(template.render(path, {'items': items}))
 
-    def post(self):
-        user = users.get_current_user()
-        if not user:
-            self.redirect(users.create_login_url(self.request.uri))
-
-        weight  = self.request.get('weight')
-        fat     = self.request.get('fat')
-        muscle  = self.request.get('muscle')
-        aerobic = self.request.get('aerobic')
-
-        trainning = Trainning(
-            user    = user,
-            weight  = float(weight) if weight else None,
-            fat     = float(fat) if fat else None,
-            muscle  = int(muscle) if muscle else None,
-            aerobic = int(aerobic) if aerobic else None,
-        )
-        trainning.put()
-        self.redirect('/')
-
 class AddItemAction(webapp.RequestHandler):
     def get(self):
         user = users.get_current_user()
@@ -102,7 +83,7 @@ class AddItemAction(webapp.RequestHandler):
             self.redirect(users.create_login_url(self.request.uri))
 
         path = os.path.join(os.path.dirname(__file__), 'add_item.html')
-        self.response.out.write(template.render(path, {}))
+        self.response.out.write(template.render(path, {'disps':Item.display}))
 
     def post(self):
         user = users.get_current_user()
@@ -110,9 +91,9 @@ class AddItemAction(webapp.RequestHandler):
             self.redirect(users.create_login_url(self.request.uri))
 
         item = Item(
-            user      = user,
-            name      = self.request.get('name'),
-            unit_name = self.request.get('unit_name')
+            user = user,
+            name = self.request.get('name'),
+            unit = self.request.get('unit'),
         )
         item.put()
         self.redirect('/config')
