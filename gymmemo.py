@@ -15,83 +15,77 @@ from model import *
 # from google.appengine.api import mail
 
 #
-# RequestHandler
+# decorators
 #
-class RecordTrainningAction(webapp.RequestHandler):
-    def get(self):
+def login_required(function):
+    def _loging_required(arg):
         user = users.get_current_user()
         if not user:
-            self.redirect(users.create_login_url(self.request.uri))
+            arg.redirect(users.create_login_url(arg.request.uri))
 
-        items = Item.all().filter('status =', True).filter('user =', user).fetch(100)
+        arg.user = user
+        res = function(arg)
+        return res
+    return _loging_required
+
+#
+# RequestHandler
+#
+class SsRequestHandler(webapp.RequestHandler):
+    pass
+
+class RecordTrainningAction(SsRequestHandler):
+    @login_required
+    def get(self):
+        items = Item.all().filter('status =', True).filter('user =', self.user).fetch(100)
         path = os.path.join(os.path.dirname(__file__), 'record.html')
         self.response.out.write(template.render(path, {'items': items, 'disps':Item.display}))
 
+    @login_required
     def post(self):
-        user = users.get_current_user()
-        if not user:
-            self.redirect(users.create_login_url(self.request.uri))
-
-        # logging.info(self.request.POST.items())
         for key, value in self.request.POST.items():
             if not (key and value): continue
 
             item = Item.get(key)
             trainning = Trainning(
-                user   = user,
+                user   = self.user,
                 item   = item,
                 value  = int(value),
             )
             trainning.put()
         self.redirect('/')
 
-class ListTrainningAction(webapp.RequestHandler):
+class ListTrainningAction(SsRequestHandler):
+    @login_required
     def get(self):
-        user = users.get_current_user()
-        if not user:
-            self.redirect(users.create_login_url(self.request.uri))
-
-        days = Trainning.get_days(user)
+        days = Trainning.get_days(self.user)
         path = os.path.join(os.path.dirname(__file__), 'list.html')
         self.response.out.write(template.render(path, {'days': days}))
 
-class ViewTrainningAction(webapp.RequestHandler):
+class ViewTrainningAction(SsRequestHandler):
+    @login_required
     def get(self):
-        user = users.get_current_user()
-        if not user:
-            self.redirect(users.create_login_url(self.request.uri))
-
-        trainnings = Trainning.get_list_at(user, self.request.get('created'))
+        trainnings = Trainning.get_list_at(self.user, self.request.get('created'))
         path = os.path.join(os.path.dirname(__file__), 'view.html')
         self.response.out.write(template.render(path, {'trainnings': trainnings}))
 
-class SetConfigAction(webapp.RequestHandler):
+class SetConfigAction(SsRequestHandler):
+    @login_required
     def get(self):
-        user = users.get_current_user()
-        if not user:
-            self.redirect(users.create_login_url(self.request.uri))
-
-        items = Item.all().filter('user =', user).fetch(100)
-
+        items = Item.all().filter('user =', self.user).fetch(100)
         path = os.path.join(os.path.dirname(__file__), 'config.html')
         self.response.out.write(template.render(path, {'items': items}))
 
-class AddItemAction(webapp.RequestHandler):
+class AddItemAction(SsRequestHandler):
+    @login_required
     def get(self):
-        user = users.get_current_user()
-        if not user:
-            self.redirect(users.create_login_url(self.request.uri))
-
         path = os.path.join(os.path.dirname(__file__), 'add_item.html')
         self.response.out.write(template.render(path, {'disps':Item.display}))
 
+    @login_required
     def post(self):
-        user = users.get_current_user()
-        if not user:
-            self.redirect(users.create_login_url(self.request.uri))
-
         item = Item(
-            user = user,
+            user = self.user,
             name = self.request.get('name'),
             unit = self.request.get('unit'),
         )
