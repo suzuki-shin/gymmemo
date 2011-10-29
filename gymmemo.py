@@ -92,12 +92,32 @@ class AddItemAction(SsRequestHandler):
         item.put()
         self.redirect('/config')
 
+class DebugAction(SsRequestHandler):
+    @login_required
+    def get(self):
+        path = os.path.join(os.path.dirname(__file__), 'debug.html')
+        self.response.out.write(template.render(path, {}))
+
+class TruncateAction(SsRequestHandler):
+    @login_required
+    def get(self):
+        items = Item.all().fetch(100)
+        for i in items:
+            i.delete()
+        trainnings = Trainning.all().fetch(100)
+        for t in trainnings:
+            t.delete()
+
+        self.redirect('/config')
+
 application = webapp.WSGIApplication(
     [('/', RecordTrainningAction),
      ('/list', ListTrainningAction),
      ('/view', ViewTrainningAction),
      ('/config', SetConfigAction),
      ('/add_item', AddItemAction),
+     ('/debug', DebugAction),
+     ('/truncate', TruncateAction),
     ],
     debug=True)
 
