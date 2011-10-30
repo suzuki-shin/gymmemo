@@ -6,27 +6,16 @@
 		<h1><a href="/">GYMMEMO</a></h1>
 	  </div>
 	  <div id="content">
-		<form action="/" method="post">
-		  {% for item in items %}
-		  {{ item.name }}
-		  <input type="text" name="{{ item.key }}" value="" size="5" />{{ item.unit }}<br />
-		  {% endfor %}
-		  <input type="submit" value="記録する" />
-		</form>
-	  </div>
-	</div>
-
-	<hr/>
-        <input id="name" type="text" value="name"/>
-        <input id="unit" type="text" value="unit"/>
+        <input id="name" type="text" value="name" size="20"/>
+        <input id="unit" type="text" value="unit" size="4"/>
         <input type="submit" value="登録"
          onclick="javascript:insertItem(document.getElementById('name').value, document.getElementById('unit').value);"/>
         <input type="submit" value="クリア"
          onclick="javascript:if (confirm('クリアします')) { clearItems(); }"/>
         <div id="render"></div>
         <div id="debug"></div>
-
-
+	  </div>
+	</div>
 	{% include "footer.html" %}
   </body>
 </html>

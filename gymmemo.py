@@ -34,6 +34,12 @@ def login_required(function):
 class SsRequestHandler(webapp.RequestHandler):
     pass
 
+class IndexAction(SsRequestHandler):
+    @login_required
+    def get(self):
+        path = os.path.join(os.path.dirname(__file__), 'index.html')
+        self.response.out.write(template.render(path, {}))
+
 class RecordTrainningAction(SsRequestHandler):
     @login_required
     def get(self):
@@ -110,14 +116,21 @@ class TruncateAction(SsRequestHandler):
 
         self.redirect('/config')
 
+class TestAction(SsRequestHandler):
+    def get(self):
+        path = os.path.join(os.path.dirname(__file__), 'test.html')
+        self.response.out.write(template.render(path, {}))
+
 application = webapp.WSGIApplication(
-    [('/', RecordTrainningAction),
+    [('/', IndexAction),
+     ('/record', RecordTrainningAction),
      ('/list', ListTrainningAction),
      ('/view', ViewTrainningAction),
      ('/config', SetConfigAction),
      ('/add_item', AddItemAction),
      ('/debug', DebugAction),
      ('/truncate', TruncateAction),
+     ('/test', TestAction),
     ],
     debug=True)
 
