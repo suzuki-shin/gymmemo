@@ -1,4 +1,5 @@
-var create_table_items = 'CREATE TABLE IF NOT EXISTS Items(status INT, user TEXT, name TEXT, unit TEXT)';
+var create_table_items = 'CREATE TABLE IF NOT EXISTS Items(id INT, status INT, user TEXT, name TEXT, unit TEXT)';
+var create_table_traininngs = 'CREATE TABLE IF NOT EXISTS trainnings(id INT, status INT, user TEXT, item_id INT, value INT)';
 
 var db = window.openDatabase("gymmemo","","GYMMEMO", 1048576);
 
@@ -16,15 +17,20 @@ function render(region) {
     printdbg('render start');
 
     db.transaction(function(tx) {
+        tx.executeSql(create_table_traininngs,[]);
         tx.executeSql(create_table_items,[]);
         tx.executeSql('SELECT * FROM Items', [], function(tx, res) {
             var str = '<table border="1"><tr><th>トレーニング種目</th></tr>';
             var len = res.rows.length;
-            printdbg('row length: '+len);
- console.log(res.rows);
             for(var i=0; i<len; i++) {
-                str += '<tr><td>' + res.rows.item(i).name + '</td><td>' + res.rows.item(i).unit + '</td> </tr>';
-            }
+                var rec_id = 'recval' + res.rows.item(i).id;
+                str += '<tr><td id="recval' + res.rows.item(i).id + '">' +
+                        res.rows.item(i).name + '</td>' +
+                        '<td><input id="recval' + res.rows.item(i).id + '" type="text" size="5" /></td>' +
+                        '<td>' + res.rows.item(i).unit + '</td>' +
+                        '<td id="record" onclick="insertRecord(' +
+                        res.rows.item(i).id + ')">登録</td></tr>';
+           }
             str += '</table>';
             renderItems(str);
         });
@@ -35,16 +41,47 @@ function renderItems(str) {
     document.getElementById('render').innerHTML = str;
 }
 
-function insertItem(name, unit) {
+var insertItem = function () {
+    _insertItem( $('#itemname').attr('value'), $('#itemunit').attr('value') );
+};
+
+function _insertItem(name, unit) {
+    console.log(name);
+    console.log(unit);
     var user = 'shinichiro.su@gmail.com';
     db.transaction(function(tx) {
-        tx.executeSql('INSERT INTO Items VALUES(?, ?, ?,?)', [1, user, name, unit],
-                      function(tx, res) {
-                          update();
-                      },
-                      function(tx, error) {
-                          reportError('sql', error.message);
-                      });
+        tx.executeSql('SELECT COUNT(*) as cnt FROM items', [], function(tx, res) {
+            var lastId = res.rows.item(0).cnt;
+            tx.executeSql('INSERT INTO Items (id, status, user, name, unit) VALUES(?, ?, ?, ?, ?)',
+                          [lastId + 1, 1, user, name, unit],
+                          function(tx, res) {
+                              console.log(res);
+                              update();
+                          },
+                          function(tx, error) {
+                              reportError('sql', error.message);
+                          });
+        });
+    });
+}
+
+function insertRecord(item_id) {
+    console.log(this);
+
+    var user = 'shinichiro.su@gmail.com';
+    db.transaction(function(tx) {
+        tx.executeSql('SELECT COUNT(*) as cnt FROM trainnings', [], function(tx, res) {
+            var lastId = res.rows.item(0).cnt;
+            tx.executeSql('INSERT INTO trainnings (id, status, user, item_id, value) VALUES(?, ?, ?, ?, ?)',
+                          [lastId + 1, 1, user, item_id, this.value],
+                          function(tx, res) {
+                              console.log(res);
+                              update();
+                          },
+                          function(tx, error) {
+                              reportError('sql', error.message);
+                          });
+        });
     });
 }
 
@@ -53,20 +90,22 @@ function reportError(source, message) {
 }
 
 function update() {
-    var region = document.getElementById('render');
+    var region = $('#render');
     printdbg('udpate start');
     render(region);
 
-    var ti = document.getElementById('name');
-    ti.value = '';
-    ti.focus();
+    $('#itemname').focus();
 }
 
 function printdbg(text){
     var dbgswitch = 1;
     if (dbgswitch) {
-        var dbg = document.getElementById('debug');
-        if (dbg)
-            dbg.innerText += text + "\n";
+        $('#debug').append(text + "<br />");
     }
 }
+
+$(function () {
+    update();
+
+    $('#itemadd').click(insertItem);
+});
