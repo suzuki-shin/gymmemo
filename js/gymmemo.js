@@ -126,8 +126,9 @@ var display_record = function() {
             var str =  $('<table><tr><th>トレーニング履歴</th></tr></table>');
             var len = res.rows.length;
             for(var i=0; i<len; i++) {
-                var reg = /^\d{4}-\d{1,2}-\d{1,2}\s(\d{1,2}:\d{1,2}:\d{1,2})/;
+                var reg = /^\d{4}-\d{1,2}-\d{1,2}[\sT](\d{1,2}:\d{1,2}:\d{1,2})/;
                 var time = reg.exec(res.rows.item(i).created_at);
+//                 console.debug(time);
                 str.append('<tr><td></td></tr>').find('td:last').text(res.rows.item(i).name).end();
                 str.find('tr:last').append('<td></td>').find('td:last').text(res.rows.item(i).value + res.rows.item(i).unit).end();
                 str.find('tr:last').append('<td></td>').find('td:last').text(time[1]).end();
