@@ -9,8 +9,13 @@
 		<p class="itemmenu">+</p>
 		<p class="itemmenu" style="display:none">-</p>
 		<div id="item" style="display:none">
-        <input id="itemname" type="text" value="name" size="20"/>
-        <input id="itemunit" type="text" value="unit" size="4"/>
+        <input id="itemname" type="text" value="" size="20"/>
+		<select id="itemunit">
+		  <option value="" />
+		  <option value="回" />回
+		  <option value="分" />分
+		  <option value="kg" />kg
+		</select>
         <input id="itemadd" type="submit" value="登録">
         <input type="submit" value="クリア"
 			   onclick="javascript:if (confirm('クリアします')) { clearItems(); }"/>

@@ -20,6 +20,7 @@ function clearItems() {
 
 var insertItem = function () {
     _insertItem( $('#itemname').attr('value'), $('#itemunit').attr('value') );
+    $('#itemname').attr('value', '');
 };
 
 function _insertItem(name, unit) {
