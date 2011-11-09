@@ -98,6 +98,11 @@ class AddItemAction(SsRequestHandler):
         item.put()
         self.redirect('/config')
 
+class UserInfoAction(SsRequestHandler):
+    @login_required
+    def get(self):
+        self.response.out.write(self.user)
+
 class DebugAction(SsRequestHandler):
     @login_required
     def get(self):
@@ -128,6 +133,7 @@ application = webapp.WSGIApplication(
      ('/view', ViewTrainningAction),
      ('/config', SetConfigAction),
      ('/add_item', AddItemAction),
+     ('/user_info', UserInfoAction),
      ('/debug', DebugAction),
      ('/truncate', TruncateAction),
      ('/test', TestAction),
