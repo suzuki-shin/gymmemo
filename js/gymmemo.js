@@ -1,3 +1,5 @@
+// var URL = 'http://szkshnchr.appspot.com/';
+var URL = 'http://localhost:8080/';
 var create_table_items = 'CREATE TABLE IF NOT EXISTS items(id INT, status INT, user TEXT, name TEXT, unit TEXT)';
 var create_table_traininngs = 'CREATE TABLE IF NOT EXISTS trainnings(id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT)';
 
@@ -81,7 +83,8 @@ var render = function() {
     db.transaction(function(tx) {
         tx.executeSql(create_table_traininngs,[]);
         tx.executeSql(create_table_items,[]);
-        tx.executeSql('SELECT * FROM items ORDER BY id DESC', [], function(tx, res) {
+        tx.executeSql('SELECT * FROM items WHERE user = ? ORDER BY id DESC',
+                      [localStorage['user']], function(tx, res) {
             $('#render').empty();
             var str =  $('<table><tr><th>トレーニング種目</th></tr></table>');
             var len = res.rows.length;
@@ -134,10 +137,19 @@ var update  = function () {
 };
 
 var setUser = function () {
-//     console.log('setUser');
-    $.get('http://localhost:8080/user_info', function(data){
-        localStorage['user'] = data;
+    console.log('setUser');
+    $.ajax('/user_info', {
+        type: 'GET',
+        success: function(data, status, xhr) {
+            console.log('success');
+            localStorage['user'] = data;
+        },
+        error: function(data, status, xhr) {
+            console.log('error');
+            location.href = URL + 'hoge';
+        }
     });
+    console.log('setUser end');
 };
 
 $(function () {
