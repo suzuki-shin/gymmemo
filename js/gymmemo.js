@@ -46,7 +46,8 @@ function _insertItem(name, unit) {
 
 function insertRecord(item_id, value) {
 //     console.log('insertRecord');
-    if (!item_id || !value) { return; }
+    console.log(value);
+    if (!item_id || value === '' || value === '0') { return; }
 
     db.transaction(function(tx) {
         tx.executeSql('SELECT COUNT(*) as cnt FROM trainnings', [], function(tx, res) {
@@ -86,14 +87,14 @@ var render = function() {
         tx.executeSql('SELECT * FROM items WHERE user = ? ORDER BY id DESC',
                       [localStorage['user']], function(tx, res) {
             $('#render').empty();
-            var str =  $('<table><tr><th>トレーニング種目</th></tr></table>');
+            var str =  $('<table><tr><th colspan="3">トレーニング種目</th></tr></table>');
             var len = res.rows.length;
             for(var i=0; i<len; i++) {
                 var id = res.rows.item(i).id;
                 var name = res.rows.item(i).name;
                 var unit = res.rows.item(i).unit;
                 str.append('<tr><td></td></tr>').find('td:last').attr('id', 'item'+id).text(name).end();
-                str.find('tr:last').append('<td><input type="text" size="10" /></td>').find('input').attr('id', 'addrecord'+id).attr('class', 'addrecord').end();
+                str.find('tr:last').append('<td><input type="number" size="10" /></td>').find('input').attr('id', 'addrecord'+id).attr('class', 'addrecord').end();
                 str.find('tr:last').append('<td></td>').find('td:last').text(unit).end();
             }
             str.appendTo('#render');
@@ -110,7 +111,7 @@ var display_record = function() {
         tx.executeSql('SELECT * FROM trainnings t LEFT JOIN items i ON t.item_id = i.id WHERE t.user = ? ORDER BY id DESC',
                       [localStorage['user']], function(tx, res) {
                           $('#record').empty();
-                          var str =  $('<table><tr><th>トレーニング履歴</th></tr></table>');
+                          var str =  $('<table><tr><th colspan="3">トレーニング履歴</th></tr></table>');
                           var len = res.rows.length;
                           for(var i=0; i<len; i++) {
                               var reg = /^\d{4}-\d{1,2}-\d{1,2}[\sT](\d{1,2}:\d{1,2}:\d{1,2})/;
