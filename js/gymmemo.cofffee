@@ -1,0 +1,123 @@
+# URL = 'http://szkshnchr.appspot.com/'
+URL = 'http://localhost:8080/'
+create_table_items = 'CREATE TABLE IF NOT EXISTS items(id INT, status INT, user TEXT, name TEXT, unit TEXT)'
+create_table_traininngs = 'CREATE TABLE IF NOT EXISTS trainnings(id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT)'
+
+db = window.openDatabase "gymmemo","","GYMMEMO", 1048576
+
+clearItems = ->
+    db.transaction (tx) ->
+        tx.executeSql 'DROP TABLE items', [],
+                      ((tx,res) ->),
+                      (tx,error) -> reportError 'sql',error.message
+        tx.executeSql 'DROP TABLE trainnings', [],
+                      ((tx,res) ->),
+                      (tx,error) -> reportError 'sql',error.message
+    update()
+
+insertItem = ->
+    _insertItem $('#itemname').attr('value'), $('#itemunit').attr('value')
+    $('#itemname').attr('value', '')
+
+select_count_items = 'SELECT COUNT(*) as cnt FROM items'
+insert_item = 'INSERT INTO items (id, status, user, name, unit) VALUES(?, ?, ?, ?, ?)'
+_insertItem = (name, unit) ->
+    db.transaction (tx) ->
+        tx.executeSql select_count_items, [],
+                      (tx, res) ->
+                           tx.executeSql insert_item,
+                                         [res.rows.item(0).cnt + 1, 1, localStorage['user'], name, unit],
+                                         (tx, res) -> update(),
+                                         (tx, error) -> reportError 'sql', error.message
+
+select_count_traininngs = 'SELECT COUNT(*) as cnt FROM trainnings'
+insert_traininng = 'INSERT INTO trainnings (id, status, user, item_id, value, created_at) VALUES(?, ?, ?, ?, ?, ?)'
+insertRecord = (item_id, value) ->
+    console.log value
+    if not item_id or value is '' or value is '0' then return
+
+    db.transaction (tx) ->
+        tx.executeSql select_count_traininngs, [],
+                      (tx, res) ->
+                          dt = new Date()
+                          now = dt.toISOString()
+                          tx.executeSql insert_traininng,
+                                        [res.rows.item(0).cnt + 1, 1, localStorage['user'], item_id, value, now],
+                                        (tx, res) -> console.log(res); update(),
+                                        (tx, error) -> reportError 'sql', error.message
+
+reportError = (source, message) -> alert message
+
+printdbg = (text) ->
+    dbgswitch = 1
+    if dbgswitch
+        $('#debug').append(text + "<br />")
+
+select_items = 'SELECT * FROM items WHERE user = ? ORDER BY id DESC'
+render =->
+    db.transaction (tx) ->
+        tx.executeSql create_table_traininngs, []
+        tx.executeSql create_table_items, []
+        tx.executeSql select_items, [localStorage['user']],
+                      (tx, res) ->
+                          $('#render').empty()
+                          str =  $('<table><tr><th colspan="3">トレーニング種目</th></tr></table>')
+                          len = res.rows.length
+                          for i in [0...len]
+                              id = res.rows.item(i).id
+                              name = res.rows.item(i).name
+                              unit = res.rows.item(i).unit
+                              str.append('<tr><td></td></tr>').find('td:last').attr('id', 'item'+id).text(name).end()
+                              str.find('tr:last').append('<td><input type="number" size="10" /></td>').find('input').attr('id', 'addrecord'+id).attr('class', 'addrecord').end()
+                              str.find('tr:last').append('<td></td>').find('td:last').text(unit).end()
+                          str.appendTo('#render')
+
+select_trainnings = 'SELECT * FROM trainnings t LEFT JOIN items i ON t.item_id = i.id WHERE t.user = ? ORDER BY id DESC'
+display_record =->
+    db.transaction (tx) ->
+        tx.executeSql create_table_traininngs, []
+        tx.executeSql create_table_items, []
+        tx.executeSql select_trainnings,
+                      [localStorage['user']],
+                      (tx, res) ->
+                          $('#record').empty()
+                          str =  $('<table><tr><th colspan="3">トレーニング履歴</th></tr></table>')
+                          len = res.rows.length
+                          for i in [0...len]
+                              reg = /^\d{4}-\d{1,2}-\d{1,2}[\sT](\d{1,2}:\d{1,2}:\d{1,2})/
+                              time = reg.exec res.rows.item(i).created_at
+                              str.append('<tr><td></td></tr>').find('td:last').text(res.rows.item(i).name).end()
+                              str.find('tr:last').append('<td></td>').find('td:last').text(res.rows.item(i).value + res.rows.item(i).unit).end()
+                              str.find('tr:last').append('<td></td>').find('td:last').text(time[1]).end()
+                          str.appendTo('#record')
+                          $('.addrecord').blur (event) ->
+                              console.debug($(this).attr('value'))
+                              id = $(this).attr('id').slice(9,15)
+                              insertRecord id, $(this).attr('value')
+
+update =->
+    render()
+    display_record()
+
+setUser =->
+    console.log('setUser')
+    $.ajax '/user_info',
+        type: 'GET',
+        success: (data, status, xhr) ->
+            console.log('success')
+            localStorage['user'] = data
+        error: (data, status, xhr) ->
+            console.log('error')
+            location.href = URL + 'hoge'
+    console.log('setUser end')
+
+$(->
+    setUser()
+    update()
+
+    $('.itemmenu').click ->
+        $('.itemmenu').toggle()
+        $('#item').toggle()
+
+    $('#itemadd').click insertItem
+)
