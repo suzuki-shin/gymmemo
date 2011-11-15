@@ -1,5 +1,5 @@
-# URL = 'http://szkshnchr.appspot.com/'
-URL = 'http://localhost:8080/'
+URL = 'http://szkshnchr.appspot.com/'
+# URL = 'http://localhost:8080/'
 create_table_items = 'CREATE TABLE IF NOT EXISTS items(id INT, status INT, user TEXT, name TEXT, unit TEXT)'
 create_table_traininngs = 'CREATE TABLE IF NOT EXISTS trainnings(id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT)'
 
@@ -111,7 +111,7 @@ setUser =->
             location.href = URL + 'hoge'
     console.log('setUser end')
 
-$(->
+$ ->
     setUser()
     update()
 
@@ -120,4 +120,3 @@ $(->
         $('#item').toggle()
 
     $('#itemadd').click insertItem
-)
