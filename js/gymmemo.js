@@ -1,7 +1,7 @@
 (function() {
-  var URL, clearItems, create_table_items, create_table_traininngs, db, display_record, insertItem, insertRecord, insert_item, insert_traininng, printdbg, render, reportError, select_count_items, select_count_traininngs, select_items, select_trainnings, setUser, update, _insertItem;
+  var URL, clearItems, create_table_items, create_table_traininngs, db, display_record, editItem, insertItem, insertRecord, insert_item, insert_traininng, printdbg, render, reportError, select_count_items, select_count_traininngs, select_items, select_trainnings, setUser, update, _insertItem;
 
-  URL = 'http://localhost:8080/';
+  URL = 'http://szkshnchr.appspot.com/';
 
   create_table_items = 'CREATE TABLE IF NOT EXISTS items(id INT, status INT, user TEXT, name TEXT, unit TEXT)';
 
@@ -24,6 +24,10 @@
   insertItem = function() {
     _insertItem($('#itemname').attr('value'), $('#itemunit').attr('value'));
     return $('#itemname').attr('value', '');
+  };
+
+  editItem = function() {
+    return alert('edit');
   };
 
   select_count_items = 'SELECT COUNT(*) as cnt FROM items';
@@ -83,13 +87,17 @@
       return tx.executeSql(select_items, [localStorage['user']], function(tx, res) {
         var i, id, len, name, str, unit;
         $('#render').empty();
-        str = $('<table><tr><th colspan="3">トレーニング種目</th></tr></table>');
+        str = $('<table><tr><th colspan="3" id="itemtitle">トレーニング種目</th></tr></table>');
         len = res.rows.length;
         for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
           id = res.rows.item(i).id;
           name = res.rows.item(i).name;
           unit = res.rows.item(i).unit;
-          str.append('<tr><td></td></tr>').find('td:last').attr('id', 'item' + id).text(name).end();
+          str.append('<tr><td></td></tr>').find('td:last').attr({
+            id: 'item' + id
+          }).addClass('itemnamecls').text(name).click(function(id) {
+            return alert(id);
+          }).end();
           str.find('tr:last').append('<td><input type="number" size="10" /></td>').find('input').attr('id', 'addrecord' + id).attr('class', 'addrecord').end();
           str.find('tr:last').append('<td></td>').find('td:last').text(unit).end();
         }
@@ -151,11 +159,11 @@
   $(function() {
     setUser();
     update();
-    $('.itemmenu').click(function() {
+    $('#itemadd').click(insertItem);
+    return $('.itemmenu').click(function() {
       $('.itemmenu').toggle();
       return $('#item').toggle();
     });
-    return $('#itemadd').click(insertItem);
   });
 
 }).call(this);

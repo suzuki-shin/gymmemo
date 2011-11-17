@@ -5,7 +5,7 @@ create_table_traininngs = 'CREATE TABLE IF NOT EXISTS trainnings(id INT, status 
 
 db = window.openDatabase "gymmemo","","GYMMEMO", 1048576
 
-clearItems = ->
+clearItems =->
     db.transaction (tx) ->
         tx.executeSql 'DROP TABLE items', [],
                       ((tx,res) ->),
@@ -15,9 +15,12 @@ clearItems = ->
                       (tx,error) -> reportError 'sql',error.message
     update()
 
-insertItem = ->
+insertItem =->
     _insertItem $('#itemname').attr('value'), $('#itemunit').attr('value')
     $('#itemname').attr('value', '')
+
+editItem =->
+    alert 'edit'
 
 select_count_items = 'SELECT COUNT(*) as cnt FROM items'
 insert_item = 'INSERT INTO items (id, status, user, name, unit) VALUES(?, ?, ?, ?, ?)'
@@ -61,15 +64,26 @@ render =->
         tx.executeSql select_items, [localStorage['user']],
                       (tx, res) ->
                           $('#render').empty()
-                          str =  $('<table><tr><th colspan="3">トレーニング種目</th></tr></table>')
+                          str =  $('<table><tr><th colspan="3" id="itemtitle">トレーニング種目</th></tr></table>')
                           len = res.rows.length
                           for i in [0...len]
                               id = res.rows.item(i).id
                               name = res.rows.item(i).name
                               unit = res.rows.item(i).unit
-                              str.append('<tr><td></td></tr>').find('td:last').attr('id', 'item'+id).text(name).end()
-                              str.find('tr:last').append('<td><input type="number" size="10" /></td>').find('input').attr('id', 'addrecord'+id).attr('class', 'addrecord').end()
-                              str.find('tr:last').append('<td></td>').find('td:last').text(unit).end()
+                              str.append('<tr><td></td></tr>')
+                                 .find('td:last')
+                                 .attr({id:'item'+id})
+                                 .addClass('itemnamecls')
+                                 .text(name).click((id) -> alert id).end()
+                              str.find('tr:last')
+                                 .append('<td><input type="number" size="10" /></td>')
+                                 .find('input')
+                                 .attr('id', 'addrecord'+id)
+                                 .attr('class', 'addrecord').end()
+                              str.find('tr:last')
+                                 .append('<td></td>')
+                                 .find('td:last')
+                                 .text(unit).end()
                           str.appendTo('#render')
 
 select_trainnings = 'SELECT * FROM trainnings t LEFT JOIN items i ON t.item_id = i.id WHERE t.user = ? ORDER BY id DESC'
@@ -115,8 +129,7 @@ $ ->
     setUser()
     update()
 
+    $('#itemadd').click insertItem
     $('.itemmenu').click ->
         $('.itemmenu').toggle()
         $('#item').toggle()
-
-    $('#itemadd').click insertItem
