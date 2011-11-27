@@ -1,9 +1,9 @@
 create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr1 TEXT, attr2 TEXT)'
 create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value1 INT, value2 INT, created_at TEXT)'
-select_items = 'SELECT * FROM items WHERE user = ? AND status = ?'
+select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DESC'
 select_count_items = 'SELECT COUNT(*) as cnt FROM items'
 insert_item = 'INSERT INTO items (id, status, user, name, attr1, attr2) VALUES (?, ?, ?, ?, ?, ?)'
-select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ?'
+select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10'
 insert_record = 'INSERT INTO records (id, status, user, item_id, value1, value2) VALUES (?, ?, ?, ?, ?, ?)'
 select_count_records = 'SELECT COUNT(*) as cnt FROM records'
 
@@ -50,7 +50,7 @@ _renderItems = (tx) ->
     console.log('_renderItems')
     _res2inputElems = (res) ->
         len = res.rows.length
-        (res.rows.item(i).name + '<input type="text" id="item' + res.rows.item(i).id + '" size=5" />' + res.rows.item(i).id for i in [0...len])
+        (res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).id for i in [0...len])
 
     tx.executeSql select_items, [localStorage['user'], 1],
                   (tx, res) ->
@@ -77,11 +77,14 @@ _renderRecords = (tx) ->
                                       .append wrapHtmlList(_res2NameValues(res), 'li').join('')
                   reportError
 
-insertItem =->
+insertItem = (ev) ->
     _insertItem localStorage['user'],
                 $('#itemname').attr('value'),
                 $('#itemattr1').attr('value'),
                 $('#itemattr2').attr('value'),
+    $('#itemname').attr('value', '')
+    $('#itemattr1').attr('value', '')
+    $('#itemattr2').attr('value', '')
     renderItems()
     false
 
@@ -100,8 +103,12 @@ _insertItem = (user, name, attr1, attr2) ->
                                          (tx, error) -> reportError 'sql', error.message
 
 insertRecord = (ev) ->
+    if not ev.target.value
+        return
+
     item_id = ev.target.id.slice(4,8)
     _insertRecord localStorage['user'], item_id, ev.target.value, null
+    $(ev.target).attr('value', '')
     renderRecords()
     false
 

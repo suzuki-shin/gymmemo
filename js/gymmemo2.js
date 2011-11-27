@@ -5,13 +5,13 @@
 
   create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value1 INT, value2 INT, created_at TEXT)';
 
-  select_items = 'SELECT * FROM items WHERE user = ? AND status = ?';
+  select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DESC';
 
   select_count_items = 'SELECT COUNT(*) as cnt FROM items';
 
   insert_item = 'INSERT INTO items (id, status, user, name, attr1, attr2) VALUES (?, ?, ?, ?, ?, ?)';
 
-  select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ?';
+  select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10';
 
   insert_record = 'INSERT INTO records (id, status, user, item_id, value1, value2) VALUES (?, ?, ?, ?, ?, ?)';
 
@@ -87,7 +87,7 @@
       len = res.rows.length;
       _results = [];
       for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
-        _results.push(res.rows.item(i).name + '<input type="text" id="item' + res.rows.item(i).id + '" size=5" />' + res.rows.item(i).id);
+        _results.push(res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).id);
       }
       return _results;
     };
@@ -121,8 +121,11 @@
     }, reportError);
   };
 
-  insertItem = function() {
+  insertItem = function(ev) {
     _insertItem(localStorage['user'], $('#itemname').attr('value'), $('#itemattr1').attr('value'), $('#itemattr2').attr('value'));
+    $('#itemname').attr('value', '');
+    $('#itemattr1').attr('value', '');
+    $('#itemattr2').attr('value', '');
     renderItems();
     return false;
   };
@@ -146,8 +149,10 @@
 
   insertRecord = function(ev) {
     var item_id;
+    if (!ev.target.value) return;
     item_id = ev.target.id.slice(4, 8);
     _insertRecord(localStorage['user'], item_id, ev.target.value, null);
+    $(ev.target).attr('value', '');
     renderRecords();
     return false;
   };
