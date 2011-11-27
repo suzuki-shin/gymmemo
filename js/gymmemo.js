@@ -1,5 +1,5 @@
 (function() {
-  var URL, clearItems, create_table_items, create_table_traininngs, db, display_record, editItem, insertItem, insertRecord, insert_item, insert_traininng, printdbg, render, reportError, select_count_items, select_count_traininngs, select_items, select_trainnings, setUser, update, _insertItem;
+  var URL, clearItems, create_table_items, create_table_traininngs, db, display_record, editItem, insertItem, insertRecord, insert_item, insert_traininng, is_exist, printdbg, render, reportError, select_count_items, select_count_traininngs, select_items, select_trainnings, setUser, update, update_item, _insertItem;
 
   URL = 'http://szkshnchr.appspot.com/';
 
@@ -21,7 +21,8 @@
     return update();
   };
 
-  insertItem = function() {
+  insertItem = function(event) {
+    console.log(event);
     _insertItem($('#itemname').attr('value'), $('#itemunit').attr('value'));
     return $('#itemname').attr('value', '');
   };
@@ -32,17 +33,35 @@
 
   select_count_items = 'SELECT COUNT(*) as cnt FROM items';
 
+  is_exist = 'SELECT id FROM items where name = ?';
+
   insert_item = 'INSERT INTO items (id, status, user, name, unit) VALUES(?, ?, ?, ?, ?)';
 
+  update_item = 'UPDATE items set name = ?, unit = ? where id = ?';
+
   _insertItem = function(name, unit) {
-    return db.transaction(function(tx) {
-      return tx.executeSql(select_count_items, [], function(tx, res) {
-        return tx.executeSql(insert_item, [res.rows.item(0).cnt + 1, 1, localStorage['user'], name, unit], function(tx, res) {
-          return update();
-        }, function(tx, error) {
-          return reportError('sql', error.message);
+    return tx.executeSql(is_exist, [name], function(tx, res) {
+      if (rew.rows.item(0).id) {
+        console.log('update');
+        return db.transaction(function(tx) {
+          return tx.executeSql(update_item, [name, unit, res.rows.item(0).id], function(tx, res) {
+            return update();
+          }, function(tx, error) {
+            return reportError('sql', error.message);
+          });
         });
-      });
+      } else {
+        console.log('insert');
+        return db.transaction(function(tx) {
+          return tx.executeSql(select_count_items, [], function(tx, res) {
+            return tx.executeSql(insert_item, [res.rows.item(0).cnt + 1, 1, localStorage['user'], name, unit], function(tx, res) {
+              return update();
+            }, function(tx, error) {
+              return reportError('sql', error.message);
+            });
+          });
+        });
+      }
     });
   };
 
@@ -95,9 +114,7 @@
           unit = res.rows.item(i).unit;
           str.append('<tr><td></td></tr>').find('td:last').attr({
             id: 'item' + id
-          }).addClass('itemnamecls').text(name).click(function(id) {
-            return alert(id);
-          }).end();
+          }).addClass('itemnamecls').text(name).end();
           str.find('tr:last').append('<td><input type="number" size="10" /></td>').find('input').attr('id', 'addrecord' + id).attr('class', 'addrecord').end();
           str.find('tr:last').append('<td></td>').find('td:last').text(unit).end();
         }
@@ -156,9 +173,20 @@
     return console.log('setUser end');
   };
 
+  editItem = function(event) {
+    console.dir(event);
+    console.trace();
+    debugger;
+    $('#item').show();
+    return $('#itemname').attr({
+      value: event.target.innerText
+    }).focus();
+  };
+
   $(function() {
     setUser();
     update();
+    $(document).delegate('.itemnamecls', 'click', editItem);
     $('#itemadd').click(insertItem);
     return $('.itemmenu').click(function() {
       $('.itemmenu').toggle();

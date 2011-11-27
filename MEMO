@@ -1,0 +1,27 @@
+* 設計MEMO
+
+** DB
+*** ブラウザ側
+- items (トレーニングの種目)
+ - id
+ - staus
+ - user ユーザー
+ - name 種目名
+ - attr1 属性1 [回数, 時間]
+ - attr2 属性2 [重さ]
+
+- records (トレーニング記録)
+ - id
+ - staus
+ - user
+ - item_id
+ - value1
+ - value2
+
+- configs
+ - id
+ - staus
+ - user
+
+*** サーバ側
+

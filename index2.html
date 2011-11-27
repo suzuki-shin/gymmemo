@@ -1,0 +1,39 @@
+<html>
+  {% include "header.html" %}
+  <body>
+	<div id="container">
+	  <div id="header">
+		<h1><a href="/">GYMMEMO</a></h1>
+	  </div>
+	  <div id="content">
+		<h2 id="itemstitle">トレーニング種目</h2>
+		<div id="items">
+		  <form id="itemadd" style="display:none;">
+			<input type="text" id="itemname" name="itemname" value="種目名" />
+			<select name="itemattr2" id="itemattr2">
+			  <option value="" />
+			  <option value="kg" />kg
+			</select>
+			<select name="itemattr1" id="itemattr1">
+			  <option value="" />
+			  <option value="回" />回
+			  <option value="分" />分
+			</select>
+			<button>登録</button>
+		  </form>
+		  <ul id="itemlist">
+		  </ul>
+		</div>
+		<h2 id="recordstitle">トレーニング記録</h2>
+		<div id="records">
+		  <ul id="recordlist">
+		  </ul>
+		</div>
+	  </div>
+	  <p id="clear">clear</p>
+	  <p id="create">create</p>
+	  <p id="debug">debug</p>
+	</div>
+	{% include "footer.html" %}
+  </body>
+</html>
