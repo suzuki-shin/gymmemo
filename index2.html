@@ -10,29 +10,28 @@
 		<div id="items">
 		  <form id="itemadd" style="display:none;">
 			<input type="text" id="itemname" name="itemname" value="種目名" />
-			<select name="itemattr2" id="itemattr2">
-			  <option value="" />
-			  <option value="kg" />kg
-			</select>
 			<select name="itemattr1" id="itemattr1">
 			  <option value="" />
 			  <option value="回" />回
 			  <option value="分" />分
+			  <option value="kg" />kg
 			</select>
 			<button>登録</button>
 		  </form>
 		  <ul id="itemlist">
 		  </ul>
 		</div>
-		<h2 id="recordstitle">トレーニング記録</h2>
+		<h2 id="recordstitle">今日のトレーニング記録</h2>
 		<div id="records">
 		  <ul id="recordlist">
 		  </ul>
 		</div>
 	  </div>
-	  <p id="clear">clear</p>
-	  <p id="create">create</p>
-	  <p id="debug">debug</p>
+	  <div class="debug" style="display:none;">
+		<p id="clear">clear</p>
+		<p id="create">create</p>
+		<p id="debug">debug</p>
+	  </div>
 	</div>
 	{% include "footer.html" %}
   </body>

@@ -1,5 +1,5 @@
 (function() {
-  var createTableItems, createTableRecords, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, insertItem, insertRecord, insert_item, insert_record, renderItems, renderRecords, reportError, select_count_items, select_count_records, select_items, select_records, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderRecords;
+  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, insertItem, insertRecord, insert_item, insert_record, renderItems, renderRecords, reportError, select_count_items, select_count_records, select_items, select_records, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderRecords;
 
   create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr1 TEXT, attr2 TEXT)';
 
@@ -22,44 +22,28 @@
   dropTableItems = function() {
     console.trace();
     return db.transaction(function(tx) {
-      return tx.executeSql('DROP TABLE items', [], function() {
-        return alert('error: dropTableItems');
-      }, function() {
-        return alert('success: dropTableItems');
-      });
+      return tx.executeSql('DROP TABLE items', []);
     });
   };
 
   createTableItems = function() {
     console.trace();
     return db.transaction(function(tx) {
-      return tx.executeSql(create_table_items, [], function() {
-        return alert('error: createTableItems');
-      }, function() {
-        return alert('success: createTableItems');
-      });
+      return tx.executeSql(create_table_items, []);
     });
   };
 
   dropTableRecords = function() {
     console.trace();
     return db.transaction(function(tx) {
-      return tx.executeSql('DROP TABLE records', [], function() {
-        return alert('error: dropTableRecords');
-      }, function() {
-        return alert('success: dropTableRecords');
-      });
+      return tx.executeSql('DROP TABLE records', []);
     });
   };
 
   createTableRecords = function() {
     console.trace();
     return db.transaction(function(tx) {
-      return tx.executeSql(create_table_records, [], function() {
-        return alert('error: createTableRecords');
-      }, function() {
-        return alert('success: createTableRecords');
-      });
+      return tx.executeSql(create_table_records, []);
     });
   };
 
@@ -87,7 +71,7 @@
       len = res.rows.length;
       _results = [];
       for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
-        _results.push(res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).id);
+        _results.push(res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).attr1);
       }
       return _results;
     };
@@ -122,6 +106,7 @@
   };
 
   insertItem = function(ev) {
+    if (!$('#itemname').attr('value')) return;
     _insertItem(localStorage['user'], $('#itemname').attr('value'), $('#itemattr1').attr('value'), $('#itemattr2').attr('value'));
     $('#itemname').attr('value', '');
     $('#itemattr1').attr('value', '');
@@ -189,7 +174,13 @@
     return alert(message);
   };
 
+  createTables = function() {
+    createTableItems();
+    return createTableRecords();
+  };
+
   $(function() {
+    createTables();
     setUser();
     renderItems();
     renderRecords();

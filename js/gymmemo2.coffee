@@ -14,29 +14,29 @@ dropTableItems =->
     console.trace()
     db.transaction (tx) ->
          tx.executeSql 'DROP TABLE items', [],
-         -> alert 'error: dropTableItems',
-         -> alert 'success: dropTableItems',
+#          -> alert 'error: dropTableItems',
+#          -> alert 'success: dropTableItems',
 
 createTableItems =->
     console.trace()
     db.transaction (tx) ->
          tx.executeSql create_table_items, [],
-         -> alert 'error: createTableItems',
-         -> alert 'success: createTableItems'
+#          -> alert 'error: createTableItems',
+#          -> alert 'success: createTableItems'
 
 dropTableRecords =->
     console.trace()
     db.transaction (tx) ->
          tx.executeSql 'DROP TABLE records', [],
-         -> alert 'error: dropTableRecords',
-         -> alert 'success: dropTableRecords',
+#          -> alert 'error: dropTableRecords',
+#          -> alert 'success: dropTableRecords',
 
 createTableRecords =->
     console.trace()
     db.transaction (tx) ->
          tx.executeSql create_table_records, [],
-         -> alert 'error: createTableRecords',
-         -> alert 'success: createTableRecords',
+#          -> alert 'error: createTableRecords',
+#          -> alert 'success: createTableRecords',
 
 wrapHtmlList = (list, tag) ->
     console.log list
@@ -50,7 +50,7 @@ _renderItems = (tx) ->
     console.log('_renderItems')
     _res2inputElems = (res) ->
         len = res.rows.length
-        (res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).id for i in [0...len])
+        (res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).attr1 for i in [0...len])
 
     tx.executeSql select_items, [localStorage['user'], 1],
                   (tx, res) ->
@@ -78,6 +78,9 @@ _renderRecords = (tx) ->
                   reportError
 
 insertItem = (ev) ->
+    if not $('#itemname').attr('value')
+        return
+
     _insertItem localStorage['user'],
                 $('#itemname').attr('value'),
                 $('#itemattr1').attr('value'),
@@ -138,7 +141,12 @@ reportError = (source, message) ->
     console.trace()
     alert message
 
+createTables =->
+    createTableItems()
+    createTableRecords()
+
 $ ->
+    createTables()
     setUser()
 
     # render
