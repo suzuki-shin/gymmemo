@@ -1,19 +1,19 @@
 (function() {
   var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, insertItem, insertRecord, insert_item, insert_record, renderItems, renderRecords, reportError, select_count_items, select_count_records, select_items, select_records, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderRecords;
 
-  create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr1 TEXT, attr2 TEXT)';
+  create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT)';
 
-  create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value1 INT, value2 INT, created_at TEXT)';
+  create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT)';
 
   select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DESC';
 
   select_count_items = 'SELECT COUNT(*) as cnt FROM items';
 
-  insert_item = 'INSERT INTO items (id, status, user, name, attr1, attr2) VALUES (?, ?, ?, ?, ?, ?)';
+  insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)';
 
   select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10';
 
-  insert_record = 'INSERT INTO records (id, status, user, item_id, value1, value2) VALUES (?, ?, ?, ?, ?, ?)';
+  insert_record = 'INSERT INTO records (id, status, user, item_id, value) VALUES (?, ?, ?, ?, ?)';
 
   select_count_records = 'SELECT COUNT(*) as cnt FROM records';
 
@@ -71,7 +71,7 @@
       len = res.rows.length;
       _results = [];
       for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
-        _results.push(res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).attr1);
+        _results.push(res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).attr);
       }
       return _results;
     };
@@ -94,7 +94,7 @@
       len = res.rows.length;
       _results = [];
       for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
-        _results.push(res.rows.item(i).name + ' ' + res.rows.item(i).value1 + res.rows.item(i).attr1);
+        _results.push(res.rows.item(i).name + ' ' + res.rows.item(i).value + res.rows.item(i).attr);
       }
       return _results;
     };
@@ -107,23 +107,21 @@
 
   insertItem = function(ev) {
     if (!$('#itemname').attr('value')) return;
-    _insertItem(localStorage['user'], $('#itemname').attr('value'), $('#itemattr1').attr('value'), $('#itemattr2').attr('value'));
+    _insertItem(localStorage['user'], $('#itemname').attr('value'), $('#itemattr').attr('value'));
     $('#itemname').attr('value', '');
-    $('#itemattr1').attr('value', '');
-    $('#itemattr2').attr('value', '');
+    $('#itemattr').attr('value', '');
     renderItems();
     return false;
   };
 
-  _insertItem = function(user, name, attr1, attr2) {
+  _insertItem = function(user, name, attr) {
     console.log('user:' + user);
     console.log('name:' + name);
-    console.log('attr1:' + attr1);
-    console.log('attr2:' + attr2);
+    console.log('attr:' + attr);
     return db.transaction(function(tx) {
       return tx.executeSql(select_count_items, [], function(tx, res) {
         console.log(res);
-        return tx.executeSql(insert_item, [res.rows.item(0).cnt + 1, 1, user, name, attr1, attr2], function(tx, res) {
+        return tx.executeSql(insert_item, [res.rows.item(0).cnt + 1, 1, user, name, attr], function(tx, res) {
           return console.log(res);
         }, function(tx, error) {
           return reportError('sql', error.message);
@@ -142,11 +140,11 @@
     return false;
   };
 
-  _insertRecord = function(user, item_id, value1, value2) {
+  _insertRecord = function(user, item_id, value) {
     return db.transaction(function(tx) {
       return tx.executeSql(select_count_records, [], function(tx, res) {
         console.log(res);
-        return tx.executeSql(insert_record, [res.rows.item(0).cnt + 1, 1, user, item_id, value1, value2], function(tx, res) {
+        return tx.executeSql(insert_record, [res.rows.item(0).cnt + 1, 1, user, item_id, value], function(tx, res) {
           return console.log(res);
         }, reportError);
       });
