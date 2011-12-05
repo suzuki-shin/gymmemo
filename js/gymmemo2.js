@@ -1,9 +1,9 @@
 (function() {
-  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, insertItem, insertRecord, insert_item, insert_record, renderItems, renderRecords, reportError, select_count_items, select_count_records, select_items, select_records, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderRecords;
+  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, insertItem, insertRecord, insert_item, insert_record, renderItems, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_unsaved, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderRecords;
 
-  create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT)';
+  create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)';
 
-  create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT)';
+  create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT, is_saved INT DEFAULT 0)';
 
   select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DESC';
 
@@ -16,6 +16,10 @@
   insert_record = 'INSERT INTO records (id, status, user, item_id, value) VALUES (?, ?, ?, ?, ?)';
 
   select_count_records = 'SELECT COUNT(*) as cnt FROM records';
+
+  select_items_unsaved = 'SELECT id, status, user, name, attr, is_saved FROM items WHERE user = ? AND is_saved = 0 ORDER BY id DESC';
+
+  select_records_unsaved = 'SELECT * FROM records WHERE user = ? AND is_saved = 0 ORDER BY id DESC';
 
   db = window.openDatabase("gymmemo", "", "GYMMEMO", 1048576);
 
@@ -169,12 +173,40 @@
 
   reportError = function(source, message) {
     console.trace();
-    return alert(message);
+    return console.log(message);
   };
 
   createTables = function() {
     createTableItems();
     return createTableRecords();
+  };
+
+  saveOnServer = function() {
+    console.log('saveOnServer');
+    db.transaction(function(tx) {
+      console.log('tranx saveOnServer');
+      return tx.executeSql(select_items_unsaved, [localStorage['user']], function(tx, res) {
+        var data, i, len;
+        len = res.rows.length;
+        data = (function() {
+          var _results;
+          _results = [];
+          for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
+            _results.push(res.rows.item(i));
+          }
+          return _results;
+        })();
+        return $.ajax({
+          type: 'POST',
+          url: '/save_item',
+          data: JSON.stringify(data),
+          success: function() {
+            return console.log('save items success');
+          }
+        });
+      }, reportError);
+    });
+    return false;
   };
 
   $(function() {
@@ -191,9 +223,12 @@
       dropTableItems();
       return dropTableRecords();
     });
-    return $('#create').click(function() {
+    $('#create').click(function() {
       createTableItems();
       return createTableRecords();
+    });
+    return $('#debug').click(function() {
+      return saveOnServer();
     });
   });
 

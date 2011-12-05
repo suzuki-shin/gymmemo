@@ -14,7 +14,7 @@ from google.appengine.ext import db
 from sets import Set
 from datetime import datetime
 from time import strptime
-# import logging
+import logging
 # import inspect
 #logging.debug(inspect.currentframe().f_lineno)
 
@@ -24,31 +24,38 @@ from time import strptime
 class Item(db.Model):
     u"""トレーニング種目
      """
-    status    = db.BooleanProperty(default=True)
-    created   = db.DateTimeProperty(auto_now_add=True)
-    user      = db.UserProperty(required=True)
-    name    = db.TextProperty(required=True) # 種目名
-    unit    = db.TextProperty(required=True) # 負荷単位名
-    display = {'unit': (u'なし', u'kg', u'分')}
+    item_id    = db.IntegerProperty(required=True)
+    status     = db.BooleanProperty(default=True)
+    created_at = db.DateTimeProperty(auto_now_add=True)
+    user       = db.EmailProperty(required=True)
+    name       = db.TextProperty(required=True) # 種目名
+    attr       = db.TextProperty(required=True) # 負荷単位名
+    #     is_saved   = db.BooleanProperty(default=True)
 
-class Trainning(db.Model):
+    @classmethod
+    def get_by_item_id(cls, item_id, user):
+        items = Item.all().filter('user =', user).filter('id =', item_id).fetch(1)
+        return items
+
+class Record(db.Model):
     u"""トレーニング記録
     """
-    status  = db.BooleanProperty(default=True)
-    created = db.DateTimeProperty(auto_now_add=True)
-    user    = db.UserProperty(required=True)
-    item    = db.ReferenceProperty(Item, required=True)
-    value   = db.IntegerProperty()
+    status     = db.BooleanProperty(default=True)
+    created_at = db.DateTimeProperty(auto_now_add=True)
+    user       = db.EmailProperty(required=True)
+    item_id    = db.IntegerProperty(required=True)
+    value      = db.IntegerProperty(required=True)
+#     is_saved   = db.BooleanProperty(default=True)
 
     @classmethod
     def get_days(cls, user):
         trainnings = cls.all().filter('status =', True).filter('user =', user).fetch(100)
-        return Set([t.created.strftime('%Y-%m-%d') for t in trainnings])
+        return Set([t.created_at.strftime('%Y-%m-%d') for t in trainnings])
 
     @classmethod
-    def get_list_at(cls, user, created):
+    def get_list_at(cls, user, created_at):
         trainnings = Trainning.all().filter('user =', user)
-        trainnings.filter('created >=', datetime(*strptime(created + ' 00:00:00', '%Y-%m-%d %H:%M:%S')[0:6]))
-        trainnings.filter('created <=', datetime(*strptime(created + ' 23:59:59', '%Y-%m-%d %H:%M:%S')[0:6]))
+        trainnings.filter('created_at >=', datetime(*strptime(created_at + ' 00:00:00', '%Y-%m-%d %H:%M:%S')[0:6]))
+        trainnings.filter('created_at <=', datetime(*strptime(created_at + ' 23:59:59', '%Y-%m-%d %H:%M:%S')[0:6]))
         trainnings.filter('status =', True)
         return trainnings
