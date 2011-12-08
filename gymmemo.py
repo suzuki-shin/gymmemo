@@ -51,16 +51,18 @@ class SaveItemAction(SsRequestHandler):
     @login_required
     def post(self):
         params = self.request.POST.items()
-        item_list = params[0][0]
-#         logging.info(item_list)
-        for i in eval(item_list):
+        item_list = eval(params[0][0])
+        logging.info(item_list)
+        for i in item_list:
+            logging.info(i)
             if not i.get('id'): continue
             if not i.get('user'): continue
             if not i.get('name'): continue
 
-#             logging.info(i['id'])
-#             logging.info(i['user'])
-#             logging.info(unicode(i['name'], 'utf-8', 'replace'))
+            logging.info(i['id'])
+            logging.info(i['user'])
+            logging.info(unicode(i['name'], 'utf-8', 'replace'))
+            logging.info(unicode(i['attr'], 'utf-8', 'replace'))
             item_id = int(i['id'])
             item = Item.get_by_item_id(item_id, i['user'])
             if item:
