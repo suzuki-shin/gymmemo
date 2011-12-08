@@ -37,8 +37,7 @@ class SsRequestHandler(webapp.RequestHandler):
 class IndexAction(SsRequestHandler):
     @login_required
     def get(self):
-#         path = os.path.join(os.path.dirname(__file__), 'index.html')
-        path = os.path.join(os.path.dirname(__file__), 'index2.html')
+        path = os.path.join(os.path.dirname(__file__), 'index.html')
         self.response.out.write(template.render(path, {}))
 
 class SaveItemAction(SsRequestHandler):
