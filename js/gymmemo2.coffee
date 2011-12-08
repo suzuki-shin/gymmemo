@@ -4,7 +4,8 @@ select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DE
 select_count_items = 'SELECT COUNT(*) as cnt FROM items'
 insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)'
 select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10'
-insert_record = 'INSERT INTO records (id, status, user, item_id, value) VALUES (?, ?, ?, ?, ?)'
+select_todays_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC'
+insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)'
 select_count_records = 'SELECT COUNT(*) as cnt FROM records'
 select_items_unsaved = 'SELECT id, status, user, name, attr, is_saved FROM items WHERE user = ? AND is_saved = 0 ORDER BY id DESC'
 select_records_unsaved = 'SELECT * FROM records WHERE user = ? AND is_saved = 0 ORDER BY id DESC'
@@ -71,7 +72,7 @@ _renderRecords = (tx) ->
         len = res.rows.length
         (res.rows.item(i).name + ' ' + res.rows.item(i).value + res.rows.item(i).attr for i in [0...len])
 
-    tx.executeSql select_records, [localStorage['user'], 1],
+    tx.executeSql select_todays_records, [localStorage['user'], 1, getYYYYMMDD()],
                   (tx, res) ->
                       len = res.rows.length
                       $('#recordlist').empty()
@@ -108,20 +109,27 @@ insertRecord = (ev) ->
         return
 
     item_id = ev.target.id.slice(4,8)
-    _insertRecord localStorage['user'], item_id, ev.target.value, null
+    _insertRecord localStorage['user'], item_id, ev.target.value, getYYYYMMDD()
     $(ev.target).attr('value', '')
     renderRecords()
     false
 
-_insertRecord = (user, item_id, value) ->
+_insertRecord = (user, item_id, value, created_at) ->
     db.transaction (tx) ->
          tx.executeSql select_count_records, [],
                        (tx, res) ->
                            console.log res
                            tx.executeSql insert_record,
-                                         [res.rows.item(0).cnt + 1, 1, user, item_id, value]
+                                         [res.rows.item(0).cnt + 1, 1, user, item_id, value, created_at]
                                          (tx, res) -> console.log res
                                          reportError
+
+getYYYYMMDD =->
+    dt = new Date()
+    yyyy = dt.getFullYear()
+    mm = dt.getMonth() + 1
+    dd = dt.getDate()
+    return yyyy + '/' + mm + '/' + dd
 
 setUser =->
     console.log('setUser')

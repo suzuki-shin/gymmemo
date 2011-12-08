@@ -1,5 +1,5 @@
 (function() {
-  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, insertItem, insertRecord, insert_item, insert_record, renderItems, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_unsaved, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderRecords;
+  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_unsaved, select_todays_records, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderRecords;
 
   create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)';
 
@@ -13,7 +13,9 @@
 
   select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10';
 
-  insert_record = 'INSERT INTO records (id, status, user, item_id, value) VALUES (?, ?, ?, ?, ?)';
+  select_todays_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC';
+
+  insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)';
 
   select_count_records = 'SELECT COUNT(*) as cnt FROM records';
 
@@ -102,7 +104,7 @@
       }
       return _results;
     };
-    return tx.executeSql(select_records, [localStorage['user'], 1], function(tx, res) {
+    return tx.executeSql(select_todays_records, [localStorage['user'], 1, getYYYYMMDD()], function(tx, res) {
       var len;
       len = res.rows.length;
       return $('#recordlist').empty().append(wrapHtmlList(_res2NameValues(res), 'li').join(''));
@@ -138,21 +140,30 @@
     var item_id;
     if (!ev.target.value) return;
     item_id = ev.target.id.slice(4, 8);
-    _insertRecord(localStorage['user'], item_id, ev.target.value, null);
+    _insertRecord(localStorage['user'], item_id, ev.target.value, getYYYYMMDD());
     $(ev.target).attr('value', '');
     renderRecords();
     return false;
   };
 
-  _insertRecord = function(user, item_id, value) {
+  _insertRecord = function(user, item_id, value, created_at) {
     return db.transaction(function(tx) {
       return tx.executeSql(select_count_records, [], function(tx, res) {
         console.log(res);
-        return tx.executeSql(insert_record, [res.rows.item(0).cnt + 1, 1, user, item_id, value], function(tx, res) {
+        return tx.executeSql(insert_record, [res.rows.item(0).cnt + 1, 1, user, item_id, value, created_at], function(tx, res) {
           return console.log(res);
         }, reportError);
       });
     });
+  };
+
+  getYYYYMMDD = function() {
+    var dd, dt, mm, yyyy;
+    dt = new Date();
+    yyyy = dt.getFullYear();
+    mm = dt.getMonth() + 1;
+    dd = dt.getDate();
+    return yyyy + '/' + mm + '/' + dd;
   };
 
   setUser = function() {
