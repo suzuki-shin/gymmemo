@@ -7,7 +7,7 @@
 		<h1><a href="/">GYMMEMO</a></h1>
 	  </div>
 	  <div id="content">
-		<h2 id="itemstitle">トレーニング種目</h2>
+		<h2 id="itemstitle">トレーニング種目 +</h2>
 		<div id="items">
 		  <form id="itemadd" style="display:none;">
 			<input type="text" id="itemname" name="itemname" value="種目名" />
@@ -28,12 +28,10 @@
 		  </ul>
 		</div>
 	  </div>
-	  <div class="debug" style="display:block;">
-		<p id="clear">clear</p>
-		<p id="create">create</p>
-		<p id="debug">debug</p>
+	  <div id="debug">
+		.<p id="clear" style="display:none;">テーブルをDROPする</p>
 	  </div>
 	</div>
-	{% include "footer.html" %}
+<!-- 	{% include "footer.html" %} -->
   </body>
 </html>

@@ -1,12 +1,15 @@
-<html>
+<!DOCTYPE HTML>
+<html manifest="cache-manifest">
   {% include "header.html" %}
   <body>
 	<div id="container">
 	  <div id="header">
 		<h1><a href="/">GYMMEMO</a></h1>
 	  </div>
-	  <div id="content">
-		<a href="/truncate">データを全削除する</a><br />
+	  <div class="debug" style="display:block;">
+		<p id="clear">テーブルをDROPする</p>
+<!-- 		<p id="create">create</p> -->
+<!-- 		<p id="debug">debug</p> -->
 	  </div>
 	</div>
 	{% include "footer.html" %}

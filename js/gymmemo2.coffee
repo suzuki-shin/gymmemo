@@ -181,5 +181,6 @@ $ ->
         createTableItems()
         createTableRecords()
     $('#debug').click ->
-        saveOnServer()
+        $('#clear').toggle()
+#         saveOnServer()
 

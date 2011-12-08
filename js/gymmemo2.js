@@ -228,7 +228,7 @@
       return createTableRecords();
     });
     return $('#debug').click(function() {
-      return saveOnServer();
+      return $('#clear').toggle();
     });
   });
 
