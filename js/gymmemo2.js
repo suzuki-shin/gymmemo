@@ -1,5 +1,5 @@
 (function() {
-  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_unsaved, select_todays_records, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderRecords;
+  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_date, select_records_unsaved, select_todays_records, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords;
 
   create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)';
 
@@ -12,6 +12,8 @@
   insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)';
 
   select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10';
+
+  select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id';
 
   select_todays_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC';
 
@@ -26,28 +28,24 @@
   db = window.openDatabase("gymmemo", "", "GYMMEMO", 1048576);
 
   dropTableItems = function() {
-    console.trace();
     return db.transaction(function(tx) {
       return tx.executeSql('DROP TABLE items', []);
     });
   };
 
   createTableItems = function() {
-    console.trace();
     return db.transaction(function(tx) {
       return tx.executeSql(create_table_items, []);
     });
   };
 
   dropTableRecords = function() {
-    console.trace();
     return db.transaction(function(tx) {
       return tx.executeSql('DROP TABLE records', []);
     });
   };
 
   createTableRecords = function() {
-    console.trace();
     return db.transaction(function(tx) {
       return tx.executeSql(create_table_records, []);
     });
@@ -55,7 +53,6 @@
 
   wrapHtmlList = function(list, tag) {
     var l, _i, _len, _results;
-    console.log(list);
     _results = [];
     for (_i = 0, _len = list.length; _i < _len; _i++) {
       l = list[_i];
@@ -65,13 +62,11 @@
   };
 
   renderItems = function() {
-    console.log('renderItems');
     return db.transaction(_renderItems, reportError);
   };
 
   _renderItems = function(tx) {
     var _res2inputElems;
-    console.log('_renderItems');
     _res2inputElems = function(res) {
       var i, len, _results;
       len = res.rows.length;
@@ -87,14 +82,11 @@
   };
 
   renderRecords = function() {
-    console.log('renderRecords');
     return db.transaction(_renderRecords, reportError);
   };
 
   _renderRecords = function(tx) {
     var _res2NameValues;
-    console.log('_renderRecords');
-    console.log(localStorage['user']);
     _res2NameValues = function(res) {
       var i, len, _results;
       len = res.rows.length;
@@ -105,9 +97,29 @@
       return _results;
     };
     return tx.executeSql(select_todays_records, [localStorage['user'], 1, getYYYYMMDD()], function(tx, res) {
-      var len;
-      len = res.rows.length;
       return $('#recordlist').empty().append(wrapHtmlList(_res2NameValues(res), 'li').join(''));
+    }, reportError);
+  };
+
+  renderPastRecordsDate = function() {
+    return db.transaction(_renderPastRecordsDate, reportError);
+  };
+
+  _renderPastRecordsDate = function(tx) {
+    var _res2Date;
+    console.log('_renderPastRecordsDate');
+    console.log(localStorage['user']);
+    _res2Date = function(res) {
+      var i, len, _results;
+      len = res.rows.length;
+      _results = [];
+      for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
+        _results.push(res.rows.item(i).created_at);
+      }
+      return _results;
+    };
+    return tx.executeSql(select_records_date, [localStorage['user'], 1], function(tx, res) {
+      return $('#pastrecordlist').empty().append(wrapHtmlList(_res2Date(res), 'li').join(''));
     }, reportError);
   };
 
@@ -121,12 +133,8 @@
   };
 
   _insertItem = function(user, name, attr) {
-    console.log('user:' + user);
-    console.log('name:' + name);
-    console.log('attr:' + attr);
     return db.transaction(function(tx) {
       return tx.executeSql(select_count_items, [], function(tx, res) {
-        console.log(res);
         return tx.executeSql(insert_item, [res.rows.item(0).cnt + 1, 1, user, name, attr], function(tx, res) {
           return console.log(res);
         }, function(tx, error) {
@@ -149,7 +157,6 @@
   _insertRecord = function(user, item_id, value, created_at) {
     return db.transaction(function(tx) {
       return tx.executeSql(select_count_records, [], function(tx, res) {
-        console.log(res);
         return tx.executeSql(insert_record, [res.rows.item(0).cnt + 1, 1, user, item_id, value, created_at], function(tx, res) {
           return console.log(res);
         }, reportError);
@@ -167,19 +174,15 @@
   };
 
   setUser = function() {
-    console.log('setUser');
-    $.ajax('/user_info', {
+    return $.ajax('/user_info', {
       type: 'GET',
       success: function(data, status, xhr) {
-        console.log('success');
         return localStorage['user'] = data;
       },
       error: function(data, status, xhr) {
-        console.log('error');
         return location.href = URL + 'hoge';
       }
     });
-    return console.log('setUser end');
   };
 
   reportError = function(source, message) {
@@ -193,9 +196,7 @@
   };
 
   saveOnServer = function() {
-    console.log('saveOnServer');
     db.transaction(function(tx) {
-      console.log('tranx saveOnServer');
       return tx.executeSql(select_items_unsaved, [localStorage['user']], function(tx, res) {
         var data, i, len;
         len = res.rows.length;
@@ -225,11 +226,15 @@
     setUser();
     renderItems();
     renderRecords();
+    renderPastRecordsDate();
     $('#itemstitle').click(function() {
       return $('#itemadd').toggle();
     });
     $('#itemadd button').click(insertItem);
     $(document).delegate('#itemlist li input', 'change', insertRecord);
+    $('#pastrecordstitle').click(function() {
+      return $('#pastrecords').toggle();
+    });
     $('#clear').click(function() {
       dropTableItems();
       return dropTableRecords();

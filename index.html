@@ -10,7 +10,7 @@
 		<h2 id="itemstitle">トレーニング種目 +</h2>
 		<div id="items">
 		  <form id="itemadd" style="display:none;">
-			<input type="text" id="itemname" name="itemname" value="種目名" />
+			<input type="text" id="itemname" name="itemname" value="" />
 			<select name="itemattr" id="itemattr">
 			  <option value="" />
 			  <option value="回" />回
@@ -27,9 +27,14 @@
 		  <ul id="recordlist">
 		  </ul>
 		</div>
+		<h2 id="pastrecordstitle">過去のトレーニング記録</h2>
+		<div id="pastrecords" sytle="display:none;">
+		  <ul id="pastrecordlist">
+		  </ul>
+		</div>
 	  </div>
 	  <div id="debug">
-		.<p id="clear" style="display:none;">テーブルをDROPする</p>
+		[debug]<p id="clear" style="display:none;">テーブルをDROPする</p>
 	  </div>
 	</div>
 <!-- 	{% include "footer.html" %} -->

@@ -4,6 +4,7 @@ select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DE
 select_count_items = 'SELECT COUNT(*) as cnt FROM items'
 insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)'
 select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10'
+select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id'
 select_todays_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC'
 insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)'
 select_count_records = 'SELECT COUNT(*) as cnt FROM records'
@@ -60,7 +61,7 @@ _renderItems = (tx) ->
                                     .append wrapHtmlList(_res2inputElems(res), 'li').join('')
                   reportError
 
-renderRecords = () ->
+renderRecords =->
 #     console.log 'renderRecords'
     db.transaction _renderRecords, reportError
 
@@ -74,9 +75,24 @@ _renderRecords = (tx) ->
 
     tx.executeSql select_todays_records, [localStorage['user'], 1, getYYYYMMDD()],
                   (tx, res) ->
-                      len = res.rows.length
                       $('#recordlist').empty()
                                       .append wrapHtmlList(_res2NameValues(res), 'li').join('')
+                  reportError
+
+renderPastRecordsDate =->
+    db.transaction _renderPastRecordsDate, reportError
+
+_renderPastRecordsDate = (tx) ->
+    console.log('_renderPastRecordsDate')
+    console.log(localStorage['user'])
+    _res2Date = (res) ->
+        len = res.rows.length
+        (res.rows.item(i).created_at for i in [0...len])
+
+    tx.executeSql select_records_date, [localStorage['user'], 1],
+                  (tx, res) ->
+                      $('#pastrecordlist').empty()
+                                          .append wrapHtmlList(_res2Date(res), 'li').join('')
                   reportError
 
 insertItem = (ev) ->
@@ -175,11 +191,13 @@ $ ->
     # render
     renderItems()
     renderRecords()
+    renderPastRecordsDate()
 
     # add event
     $('#itemstitle').click -> $('#itemadd').toggle()
     $('#itemadd button').click insertItem
     $(document).delegate '#itemlist li input', 'change', insertRecord
+    $('#pastrecordstitle').click -> $('#pastrecords').toggle()
 
     # FOR DEBUG
     $('#clear').click ->
