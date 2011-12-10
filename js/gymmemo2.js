@@ -1,5 +1,5 @@
 (function() {
-  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2NameValues;
+  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, debugSelectItems, debugSelectRecords, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2ItemAll, _res2NameValues, _res2RecordAll;
 
   create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)';
 
@@ -122,6 +122,26 @@
     return _results;
   };
 
+  _res2ItemAll = function(res) {
+    var i, len, _results;
+    len = res.rows.length;
+    _results = [];
+    for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
+      _results.push(res.rows.item(i).id + ' ' + res.rows.item(i).name + ' ' + res.rows.item(i).user + ' ' + res.rows.item(i).attr + ' ' + res.rows.item(i).is_saved);
+    }
+    return _results;
+  };
+
+  _res2RecordAll = function(res) {
+    var i, len, _results;
+    len = res.rows.length;
+    _results = [];
+    for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
+      _results.push(res.rows.item(i).id + ' ' + res.rows.item(i).user + ' ' + res.rows.item(i).item_id + ' ' + res.rows.item(i).value + ' ' + res.rows.item(i).created_at + ' ' + res.rows.item(i).is_saved);
+    }
+    return _results;
+  };
+
   renderPastRecordsDate = function() {
     return db.transaction(_renderPastRecordsDate, reportError);
   };
@@ -223,6 +243,22 @@
     return createTableRecords();
   };
 
+  debugSelectItems = function() {
+    return db.transaction(function(tx) {
+      return tx.executeSql('select * from items', [], function(tx, res) {
+        return $('#showdb').append(wrapHtmlList(_res2ItemAll(res), 'li').join(''));
+      });
+    });
+  };
+
+  debugSelectRecords = function() {
+    return db.transaction(function(tx) {
+      return tx.executeSql('select * from records', [], function(tx, res) {
+        return $('#showdb').append(wrapHtmlList(_res2RecordAll(res), 'li').join(''));
+      });
+    });
+  };
+
   saveOnServer = function() {
     db.transaction(function(tx) {
       return tx.executeSql(select_items_unsaved, [localStorage['user']], function(tx, res) {
@@ -270,8 +306,14 @@
       createTableItems();
       return createTableRecords();
     });
+    $('#showdb').click(function() {
+      debugSelectItems();
+      return debugSelectRecords();
+    });
     return $('#debug').click(function() {
-      return $('#clear').toggle();
+      console.log('debug!');
+      $('#clear').toggle();
+      return $('#showdb').toggle();
     });
   });
 

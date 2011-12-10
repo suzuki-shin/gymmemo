@@ -89,6 +89,14 @@ _res2Date = (res) ->
     len = res.rows.length
     (res.rows.item(i).created_at for i in [0...len])
 
+_res2ItemAll= (res) ->
+    len = res.rows.length
+    (res.rows.item(i).id + ' ' + res.rows.item(i).name + ' ' + res.rows.item(i).user + ' ' + res.rows.item(i).attr + ' ' + res.rows.item(i).is_saved for i in [0...len])
+
+_res2RecordAll= (res) ->
+    len = res.rows.length
+    (res.rows.item(i).id + ' ' + res.rows.item(i).user + ' ' + res.rows.item(i).item_id + ' ' + res.rows.item(i).value + ' ' + res.rows.item(i).created_at + ' ' + res.rows.item(i).is_saved for i in [0...len])
+
 renderPastRecordsDate =->
     db.transaction _renderPastRecordsDate, reportError
 
@@ -193,6 +201,19 @@ createTables =->
     createTableItems()
     createTableRecords()
 
+debugSelectItems =->
+    db.transaction (tx) ->
+         tx.executeSql 'select * from items', [],
+                       (tx, res) ->
+                           $('#showdb').append wrapHtmlList(_res2ItemAll(res), 'li').join('')
+
+debugSelectRecords =->
+    db.transaction (tx) ->
+         tx.executeSql 'select * from records', [],
+                       (tx, res) ->
+                           $('#showdb').append wrapHtmlList(_res2RecordAll(res), 'li').join('')
+
+
 saveOnServer =->
 #     console.log 'saveOnServer'
     db.transaction (tx) ->
@@ -233,6 +254,11 @@ $ ->
     $('#create').click ->
         createTableItems()
         createTableRecords()
+    $('#showdb').click ->
+        debugSelectItems()
+        debugSelectRecords()
     $('#debug').click ->
+        console.log 'debug!'
         $('#clear').toggle()
+        $('#showdb').toggle()
 #         saveOnServer()
