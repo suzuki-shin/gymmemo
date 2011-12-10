@@ -4,7 +4,7 @@ select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DE
 select_count_items = 'SELECT COUNT(*) as cnt FROM items'
 insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)'
 select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10'
-select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id LIMIT 30'
+select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id LIMIT 10'
 select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC'
 insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)'
 select_count_records = 'SELECT COUNT(*) as cnt FROM records'
@@ -91,6 +91,7 @@ _renderPastRecordsDate = (tx) ->
     console.log(localStorage['user'])
     tx.executeSql select_records_date, [localStorage['user'], 1],
                   (tx, res) ->
+                      $('#recordsubtitle').text ''
                       $('#pastrecordlist').empty()
                                           .append wrapHtmlList(_res2Date(res), 'li').join('')
                   reportError
@@ -105,6 +106,7 @@ renderRecordByDate = (event) ->
         console.log(date)
         tx.executeSql select_records_by_date, [localStorage['user'], 1, date],
                       (tx, res) ->
+                          $('#recordsubtitle').text date
                           $('#pastrecordlist').empty()
                                               .append wrapHtmlList(_res2NameValues(res), 'li').join('')
                       reportError

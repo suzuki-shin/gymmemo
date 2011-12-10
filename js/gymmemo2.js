@@ -13,7 +13,7 @@
 
   select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10';
 
-  select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id LIMIT 30';
+  select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id LIMIT 10';
 
   select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC';
 
@@ -119,6 +119,7 @@
     console.log('_renderPastRecordsDate');
     console.log(localStorage['user']);
     return tx.executeSql(select_records_date, [localStorage['user'], 1], function(tx, res) {
+      $('#recordsubtitle').text('');
       return $('#pastrecordlist').empty().append(wrapHtmlList(_res2Date(res), 'li').join(''));
     }, reportError);
   };
@@ -132,6 +133,7 @@
       console.log(localStorage['user']);
       console.log(date);
       return tx.executeSql(select_records_by_date, [localStorage['user'], 1, date], function(tx, res) {
+        $('#recordsubtitle').text(date);
         return $('#pastrecordlist').empty().append(wrapHtmlList(_res2NameValues(res), 'li').join(''));
       }, reportError);
     };
