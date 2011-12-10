@@ -13,43 +13,43 @@ select_records_unsaved = 'SELECT * FROM records WHERE user = ? AND is_saved = 0 
 db = window.openDatabase "gymmemo","","GYMMEMO", 1048576
 
 dropTableItems =->
-    console.trace()
+#     console.trace()
     db.transaction (tx) ->
          tx.executeSql 'DROP TABLE items', [],
 #          -> alert 'error: dropTableItems',
 #          -> alert 'success: dropTableItems',
 
 createTableItems =->
-    console.trace()
+#     console.trace()
     db.transaction (tx) ->
          tx.executeSql create_table_items, [],
 #          -> alert 'error: createTableItems',
 #          -> alert 'success: createTableItems'
 
 dropTableRecords =->
-    console.trace()
+#     console.trace()
     db.transaction (tx) ->
          tx.executeSql 'DROP TABLE records', [],
 #          -> alert 'error: dropTableRecords',
 #          -> alert 'success: dropTableRecords',
 
 createTableRecords =->
-    console.trace()
+#     console.trace()
     db.transaction (tx) ->
          tx.executeSql create_table_records, [],
 #          -> alert 'error: createTableRecords',
 #          -> alert 'success: createTableRecords',
 
 wrapHtmlList = (list, tag) ->
-    console.log list
+#     console.log list
     ('<' + tag + '>' + l + '</' + tag + '>' for l in list)
 
 renderItems = () ->
-    console.log 'renderItems'
+#     console.log 'renderItems'
     db.transaction _renderItems, reportError
 
 _renderItems = (tx) ->
-    console.log('_renderItems')
+#     console.log('_renderItems')
     _res2inputElems = (res) ->
         len = res.rows.length
         (res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).attr for i in [0...len])
@@ -61,12 +61,12 @@ _renderItems = (tx) ->
                   reportError
 
 renderRecords = () ->
-    console.log 'renderRecords'
+#     console.log 'renderRecords'
     db.transaction _renderRecords, reportError
 
 _renderRecords = (tx) ->
-    console.log('_renderRecords')
-    console.log(localStorage['user'])
+#     console.log('_renderRecords')
+#     console.log(localStorage['user'])
 
     _res2NameValues = (res) ->
         len = res.rows.length
@@ -92,13 +92,13 @@ insertItem = (ev) ->
     false
 
 _insertItem = (user, name, attr) ->
-    console.log 'user:' + user
-    console.log 'name:' + name
-    console.log 'attr:' + attr
+#     console.log 'user:' + user
+#     console.log 'name:' + name
+#     console.log 'attr:' + attr
     db.transaction (tx) ->
          tx.executeSql select_count_items, [],
                        (tx, res) ->
-                           console.log res
+#                            console.log res
                            tx.executeSql insert_item,
                                          [res.rows.item(0).cnt + 1, 1, user, name, attr]
                                          (tx, res) -> console.log res
@@ -118,7 +118,7 @@ _insertRecord = (user, item_id, value, created_at) ->
     db.transaction (tx) ->
          tx.executeSql select_count_records, [],
                        (tx, res) ->
-                           console.log res
+#                            console.log res
                            tx.executeSql insert_record,
                                          [res.rows.item(0).cnt + 1, 1, user, item_id, value, created_at]
                                          (tx, res) -> console.log res
@@ -132,16 +132,16 @@ getYYYYMMDD =->
     return yyyy + '/' + mm + '/' + dd
 
 setUser =->
-    console.log('setUser')
+#     console.log('setUser')
     $.ajax '/user_info',
         type: 'GET',
         success: (data, status, xhr) ->
-            console.log('success')
+#             console.log('success')
             localStorage['user'] = data
         error: (data, status, xhr) ->
-            console.log('error')
+#             console.log('error')
             location.href = URL + 'hoge'
-    console.log('setUser end')
+#     console.log('setUser end')
 
 reportError = (source, message) ->
     console.trace()
@@ -152,9 +152,9 @@ createTables =->
     createTableRecords()
 
 saveOnServer =->
-    console.log 'saveOnServer'
+#     console.log 'saveOnServer'
     db.transaction (tx) ->
-        console.log 'tranx saveOnServer'
+#         console.log 'tranx saveOnServer'
         tx.executeSql select_items_unsaved,
                       [localStorage['user']],
                       (tx, res) ->
@@ -191,4 +191,3 @@ $ ->
     $('#debug').click ->
         $('#clear').toggle()
 #         saveOnServer()
-
