@@ -4,7 +4,7 @@ select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DE
 select_count_items = 'SELECT COUNT(*) as cnt FROM items'
 insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)'
 select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10'
-select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id LIMIT 10'
+select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.created_at DESC LIMIT 10'
 select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC'
 insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)'
 select_count_records = 'SELECT COUNT(*) as cnt FROM records'
@@ -17,14 +17,12 @@ dropTableItems =->
     if not confirm 'itemsテーブルをdropして良いですか？'
         return
 
-#     console.trace()
     db.transaction (tx) ->
          tx.executeSql 'DROP TABLE items', [],
          -> alert 'error: dropTableItems',
          -> alert 'success: dropTableItems',
 
 createTableItems =->
-#     console.trace()
     db.transaction (tx) ->
          tx.executeSql create_table_items, [],
 #          -> alert 'error: createTableItems',
@@ -34,29 +32,24 @@ dropTableRecords =->
     if not confirm 'recordsテーブルをdropして良いですか？'
         return
     alert 'iii'
-    #     console.trace()
     db.transaction (tx) ->
          tx.executeSql 'DROP TABLE records', [],
          -> alert 'error: dropTableRecords',
          -> alert 'success: dropTableRecords',
 
 createTableRecords =->
-#     console.trace()
     db.transaction (tx) ->
          tx.executeSql create_table_records, [],
 #          -> alert 'error: createTableRecords',
 #          -> alert 'success: createTableRecords',
 
 wrapHtmlList = (list, tag) ->
-#     console.log list
     ('<' + tag + '>' + l + '</' + tag + '>' for l in list)
 
 renderItems = () ->
-#     console.log 'renderItems'
     db.transaction _renderItems, reportError
 
 _renderItems = (tx) ->
-#     console.log('_renderItems')
     _res2inputElems = (res) ->
         len = res.rows.length
         (res.rows.item(i).name + '<input type="number" id="item' + res.rows.item(i).id + '" size="3" />' + res.rows.item(i).attr for i in [0...len])
@@ -68,13 +61,9 @@ _renderItems = (tx) ->
                   reportError
 
 renderRecords =->
-#     console.log 'renderRecords'
     db.transaction _renderRecords, reportError
 
 _renderRecords = (tx) ->
-#     console.log('_renderRecords')
-#     console.log(localStorage['user'])
-
     tx.executeSql select_records_by_date, [localStorage['user'], 1, getYYYYMMDD()],
                   (tx, res) ->
                       $('#recordlist').empty()
@@ -111,7 +100,7 @@ _renderPastRecordsDate = (tx) ->
                   reportError
 
 renderRecordByDate = (event) ->
-#     console.log(event)
+    alert 'renderRecordByDate'
     date = event.target.textContent
     console.log(date)
     _renderRecordByDate = (tx) ->
