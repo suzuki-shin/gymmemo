@@ -4,8 +4,8 @@ select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DE
 select_count_items = 'SELECT COUNT(*) as cnt FROM items'
 insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)'
 select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10'
-select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id'
-select_todays_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC'
+select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id LIMIT 30'
+select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC'
 insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)'
 select_count_records = 'SELECT COUNT(*) as cnt FROM records'
 select_items_unsaved = 'SELECT id, status, user, name, attr, is_saved FROM items WHERE user = ? AND is_saved = 0 ORDER BY id DESC'
@@ -69,15 +69,19 @@ _renderRecords = (tx) ->
 #     console.log('_renderRecords')
 #     console.log(localStorage['user'])
 
-    _res2NameValues = (res) ->
-        len = res.rows.length
-        (res.rows.item(i).name + ' ' + res.rows.item(i).value + res.rows.item(i).attr for i in [0...len])
-
-    tx.executeSql select_todays_records, [localStorage['user'], 1, getYYYYMMDD()],
+    tx.executeSql select_records_by_date, [localStorage['user'], 1, getYYYYMMDD()],
                   (tx, res) ->
                       $('#recordlist').empty()
                                       .append wrapHtmlList(_res2NameValues(res), 'li').join('')
                   reportError
+
+_res2NameValues = (res) ->
+    len = res.rows.length
+    (res.rows.item(i).name + ' ' + res.rows.item(i).value + res.rows.item(i).attr for i in [0...len])
+
+_res2Date = (res) ->
+    len = res.rows.length
+    (res.rows.item(i).created_at for i in [0...len])
 
 renderPastRecordsDate =->
     db.transaction _renderPastRecordsDate, reportError
@@ -85,15 +89,29 @@ renderPastRecordsDate =->
 _renderPastRecordsDate = (tx) ->
     console.log('_renderPastRecordsDate')
     console.log(localStorage['user'])
-    _res2Date = (res) ->
-        len = res.rows.length
-        (res.rows.item(i).created_at for i in [0...len])
-
     tx.executeSql select_records_date, [localStorage['user'], 1],
                   (tx, res) ->
                       $('#pastrecordlist').empty()
                                           .append wrapHtmlList(_res2Date(res), 'li').join('')
                   reportError
+
+renderRecordByDate = (event) ->
+#     console.log(event)
+    date = event.target.textContent
+    console.log(date)
+    _renderRecordByDate = (tx) ->
+        console.log('_renderRecordByDate')
+        console.log(localStorage['user'])
+        console.log(date)
+        tx.executeSql select_records_by_date, [localStorage['user'], 1, date],
+                      (tx, res) ->
+                          $('#pastrecordlist').empty()
+                                              .append wrapHtmlList(_res2NameValues(res), 'li').join('')
+                      reportError
+
+    db.transaction _renderRecordByDate, reportError
+
+
 
 insertItem = (ev) ->
     if not $('#itemname').attr('value')
@@ -197,7 +215,8 @@ $ ->
     $('#itemstitle').click -> $('#itemadd').toggle()
     $('#itemadd button').click insertItem
     $(document).delegate '#itemlist li input', 'change', insertRecord
-    $('#pastrecordstitle').click -> $('#pastrecords').toggle()
+    $('#pastrecordstitle').click renderPastRecordsDate
+    $(document).delegate '#pastrecordlist li', 'click', renderRecordByDate
 
     # FOR DEBUG
     $('#clear').click ->

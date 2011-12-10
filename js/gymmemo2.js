@@ -1,5 +1,5 @@
 (function() {
-  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_date, select_records_unsaved, select_todays_records, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords;
+  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2NameValues;
 
   create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)';
 
@@ -13,9 +13,9 @@
 
   select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10';
 
-  select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id';
+  select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.id LIMIT 30';
 
-  select_todays_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC';
+  select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC';
 
   insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)';
 
@@ -86,19 +86,29 @@
   };
 
   _renderRecords = function(tx) {
-    var _res2NameValues;
-    _res2NameValues = function(res) {
-      var i, len, _results;
-      len = res.rows.length;
-      _results = [];
-      for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
-        _results.push(res.rows.item(i).name + ' ' + res.rows.item(i).value + res.rows.item(i).attr);
-      }
-      return _results;
-    };
-    return tx.executeSql(select_todays_records, [localStorage['user'], 1, getYYYYMMDD()], function(tx, res) {
+    return tx.executeSql(select_records_by_date, [localStorage['user'], 1, getYYYYMMDD()], function(tx, res) {
       return $('#recordlist').empty().append(wrapHtmlList(_res2NameValues(res), 'li').join(''));
     }, reportError);
+  };
+
+  _res2NameValues = function(res) {
+    var i, len, _results;
+    len = res.rows.length;
+    _results = [];
+    for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
+      _results.push(res.rows.item(i).name + ' ' + res.rows.item(i).value + res.rows.item(i).attr);
+    }
+    return _results;
+  };
+
+  _res2Date = function(res) {
+    var i, len, _results;
+    len = res.rows.length;
+    _results = [];
+    for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
+      _results.push(res.rows.item(i).created_at);
+    }
+    return _results;
   };
 
   renderPastRecordsDate = function() {
@@ -106,21 +116,26 @@
   };
 
   _renderPastRecordsDate = function(tx) {
-    var _res2Date;
     console.log('_renderPastRecordsDate');
     console.log(localStorage['user']);
-    _res2Date = function(res) {
-      var i, len, _results;
-      len = res.rows.length;
-      _results = [];
-      for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
-        _results.push(res.rows.item(i).created_at);
-      }
-      return _results;
-    };
     return tx.executeSql(select_records_date, [localStorage['user'], 1], function(tx, res) {
       return $('#pastrecordlist').empty().append(wrapHtmlList(_res2Date(res), 'li').join(''));
     }, reportError);
+  };
+
+  renderRecordByDate = function(event) {
+    var date, _renderRecordByDate;
+    date = event.target.textContent;
+    console.log(date);
+    _renderRecordByDate = function(tx) {
+      console.log('_renderRecordByDate');
+      console.log(localStorage['user']);
+      console.log(date);
+      return tx.executeSql(select_records_by_date, [localStorage['user'], 1, date], function(tx, res) {
+        return $('#pastrecordlist').empty().append(wrapHtmlList(_res2NameValues(res), 'li').join(''));
+      }, reportError);
+    };
+    return db.transaction(_renderRecordByDate, reportError);
   };
 
   insertItem = function(ev) {
@@ -232,9 +247,8 @@
     });
     $('#itemadd button').click(insertItem);
     $(document).delegate('#itemlist li input', 'change', insertRecord);
-    $('#pastrecordstitle').click(function() {
-      return $('#pastrecords').toggle();
-    });
+    $('#pastrecordstitle').click(renderPastRecordsDate);
+    $(document).delegate('#pastrecordlist li', 'click', renderRecordByDate);
     $('#clear').click(function() {
       dropTableItems();
       return dropTableRecords();
