@@ -14,11 +14,14 @@ select_records_unsaved = 'SELECT * FROM records WHERE user = ? AND is_saved = 0 
 db = window.openDatabase "gymmemo","","GYMMEMO", 1048576
 
 dropTableItems =->
+    if not confirm 'itemsテーブルをdropして良いですか？'
+        return
+
 #     console.trace()
     db.transaction (tx) ->
          tx.executeSql 'DROP TABLE items', [],
-#          -> alert 'error: dropTableItems',
-#          -> alert 'success: dropTableItems',
+         -> alert 'error: dropTableItems',
+         -> alert 'success: dropTableItems',
 
 createTableItems =->
 #     console.trace()
@@ -28,11 +31,14 @@ createTableItems =->
 #          -> alert 'success: createTableItems'
 
 dropTableRecords =->
-#     console.trace()
+    if not confirm 'recordsテーブルをdropして良いですか？'
+        return
+    alert 'iii'
+    #     console.trace()
     db.transaction (tx) ->
          tx.executeSql 'DROP TABLE records', [],
-#          -> alert 'error: dropTableRecords',
-#          -> alert 'success: dropTableRecords',
+         -> alert 'error: dropTableRecords',
+         -> alert 'success: dropTableRecords',
 
 createTableRecords =->
 #     console.trace()

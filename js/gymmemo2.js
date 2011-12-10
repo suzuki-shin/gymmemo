@@ -28,8 +28,13 @@
   db = window.openDatabase("gymmemo", "", "GYMMEMO", 1048576);
 
   dropTableItems = function() {
+    if (!confirm('itemsテーブルをdropして良いですか？')) return;
     return db.transaction(function(tx) {
-      return tx.executeSql('DROP TABLE items', []);
+      return tx.executeSql('DROP TABLE items', [], function() {
+        return alert('error: dropTableItems');
+      }, function() {
+        return alert('success: dropTableItems');
+      });
     });
   };
 
@@ -40,8 +45,14 @@
   };
 
   dropTableRecords = function() {
+    if (!confirm('recordsテーブルをdropして良いですか？')) return;
+    alert('iii');
     return db.transaction(function(tx) {
-      return tx.executeSql('DROP TABLE records', []);
+      return tx.executeSql('DROP TABLE records', [], function() {
+        return alert('error: dropTableRecords');
+      }, function() {
+        return alert('success: dropTableRecords');
+      });
     });
   };
 
