@@ -117,7 +117,7 @@
     len = res.rows.length;
     _results = [];
     for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
-      _results.push(res.rows.item(i).created_at);
+      _results.push('<span>' + res.rows.item(i).created_at + '</span>');
     }
     return _results;
   };
@@ -147,8 +147,6 @@
   };
 
   _renderPastRecordsDate = function(tx) {
-    console.log('_renderPastRecordsDate');
-    console.log(localStorage['user']);
     return tx.executeSql(select_records_date, [localStorage['user'], 1], function(tx, res) {
       $('#recordsubtitle').text('');
       return $('#pastrecordlist').empty().append(wrapHtmlList(_res2Date(res), 'li').join(''));
@@ -157,13 +155,8 @@
 
   renderRecordByDate = function(event) {
     var date, _renderRecordByDate;
-    alert('renderRecordByDate');
     date = event.target.textContent;
-    console.log(date);
     _renderRecordByDate = function(tx) {
-      console.log('_renderRecordByDate');
-      console.log(localStorage['user']);
-      console.log(date);
       return tx.executeSql(select_records_by_date, [localStorage['user'], 1, date], function(tx, res) {
         $('#recordsubtitle').text(date);
         return $('#pastrecordlist').empty().append(wrapHtmlList(_res2NameValues(res), 'li').join(''));
@@ -185,7 +178,7 @@
     return db.transaction(function(tx) {
       return tx.executeSql(select_count_items, [], function(tx, res) {
         return tx.executeSql(insert_item, [res.rows.item(0).cnt + 1, 1, user, name, attr], function(tx, res) {
-          return console.log(res);
+          return '';
         }, function(tx, error) {
           return reportError('sql', error.message);
         });
@@ -207,7 +200,7 @@
     return db.transaction(function(tx) {
       return tx.executeSql(select_count_records, [], function(tx, res) {
         return tx.executeSql(insert_record, [res.rows.item(0).cnt + 1, 1, user, item_id, value, created_at], function(tx, res) {
-          return console.log(res);
+          return '';
         }, reportError);
       });
     });
@@ -296,9 +289,9 @@
       return $('#itemadd').toggle();
     });
     $('#itemadd button').click(insertItem);
-    $(document).delegate('#itemlist li input', 'change', insertRecord);
+    $(document).on('change', '#itemlist li input', insertRecord);
     $('#pastrecordstitle').click(renderPastRecordsDate);
-    $(document).delegate('#pastrecordlist li', 'click', renderRecordByDate);
+    $(document).on('touchstart', '#pastrecordlist li span', renderRecordByDate);
     $('#clear').click(function() {
       dropTableItems();
       return dropTableRecords();

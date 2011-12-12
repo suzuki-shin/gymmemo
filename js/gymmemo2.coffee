@@ -76,7 +76,7 @@ _res2NameValues = (res) ->
 
 _res2Date = (res) ->
     len = res.rows.length
-    (res.rows.item(i).created_at for i in [0...len])
+    ('<span>' + res.rows.item(i).created_at + '</span>' for i in [0...len])
 
 _res2ItemAll= (res) ->
     len = res.rows.length
@@ -90,8 +90,8 @@ renderPastRecordsDate =->
     db.transaction _renderPastRecordsDate, reportError
 
 _renderPastRecordsDate = (tx) ->
-    console.log('_renderPastRecordsDate')
-    console.log(localStorage['user'])
+#     console.log('_renderPastRecordsDate')
+#     console.log(localStorage['user'])
     tx.executeSql select_records_date, [localStorage['user'], 1],
                   (tx, res) ->
                       $('#recordsubtitle').text ''
@@ -100,13 +100,13 @@ _renderPastRecordsDate = (tx) ->
                   reportError
 
 renderRecordByDate = (event) ->
-    alert 'renderRecordByDate'
+#     alert 'renderRecordByDate'
     date = event.target.textContent
-    console.log(date)
+#     console.log(date)
     _renderRecordByDate = (tx) ->
-        console.log('_renderRecordByDate')
-        console.log(localStorage['user'])
-        console.log(date)
+#         console.log('_renderRecordByDate')
+#         console.log(localStorage['user'])
+#         console.log(date)
         tx.executeSql select_records_by_date, [localStorage['user'], 1, date],
                       (tx, res) ->
                           $('#recordsubtitle').text date
@@ -140,7 +140,7 @@ _insertItem = (user, name, attr) ->
 #                            console.log res
                            tx.executeSql insert_item,
                                          [res.rows.item(0).cnt + 1, 1, user, name, attr]
-                                         (tx, res) -> console.log res
+                                         (tx, res) -> ''#console.log res
                                          (tx, error) -> reportError 'sql', error.message
 
 insertRecord = (ev) ->
@@ -160,7 +160,7 @@ _insertRecord = (user, item_id, value, created_at) ->
 #                            console.log res
                            tx.executeSql insert_record,
                                          [res.rows.item(0).cnt + 1, 1, user, item_id, value, created_at]
-                                         (tx, res) -> console.log res
+                                         (tx, res) -> ''#console.log res
                                          reportError
 
 getYYYYMMDD =->
@@ -232,9 +232,9 @@ $ ->
     # add event
     $('#itemstitle').click -> $('#itemadd').toggle()
     $('#itemadd button').click insertItem
-    $(document).delegate '#itemlist li input', 'change', insertRecord
+    $(document).on 'change', '#itemlist li input', insertRecord
     $('#pastrecordstitle').click renderPastRecordsDate
-    $(document).delegate '#pastrecordlist li', 'click', renderRecordByDate
+    $(document).on 'touchstart', '#pastrecordlist li span', renderRecordByDate
 
     # FOR DEBUG
     $('#clear').click ->
