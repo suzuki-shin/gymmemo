@@ -1,7 +1,9 @@
 CACHE MANIFEST
-index.html
-debug.html
-stylesheets/main.css
-stylesheets/iphone.css
-js/jquery.js
-js/gymmemo2.js
+# revision 1
+
+../
+#../debug.html
+../stylesheets/main.css
+../stylesheets/iphone.css
+../js/jquery.js
+../js/gymmemo2.js

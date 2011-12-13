@@ -10,6 +10,6 @@ handlers:
   static_dir: js
 - url: /manifest
   static_dir: manifest
-
+  mime_type: text/cache-manifest
 - url: /.*
   script: gymmemo.py
