@@ -8,6 +8,7 @@ from google.appengine.ext.webapp import template
 from google.appengine.api import users
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp.util import run_wsgi_app
+from django.utils import simplejson as json
 import logging
 import inspect
 #logging.debug(inspect.currentframe().f_lineno)
@@ -52,25 +53,23 @@ class SaveItemAction(SsRequestHandler):
         params = self.request.POST.items()
         item_list = eval(params[0][0])
         logging.info(item_list)
+
         for i in item_list:
-            logging.info(i)
             if not i.get('id'): continue
             if not i.get('user'): continue
             if not i.get('name'): continue
-
-            logging.info(i['id'])
-            logging.info(i['user'])
-            logging.info(unicode(i['name'], 'utf-8', 'replace'))
-            logging.info(unicode(i['attr'], 'utf-8', 'replace'))
             item_id = int(i['id'])
-            item = Item.get_by_item_id(item_id, i['user'])
-            if item:
-                item(
-                    name = unicode(i['name'], 'utf-8', 'replace'),
-                    attr = unicode(i['attr'], 'utf-8', 'replace'),
-                )
+            items = Item.get_by_item_id(item_id, i['user'])
+            if items[0]:
+                item = items[0]
+                self.redirect('/')
+#                 item = items[0]
+#                 logging.info(item.__class__)
+#                 item(
+#                     name = unicode(i['name'], 'utf-8', 'replace'),
+#                     attr = unicode(i['attr'], 'utf-8', 'replace'),
+#                 )
             else:
-                logging.info('new7')
                 item = Item(
                     user = i['user'],
                     item_id = item_id,

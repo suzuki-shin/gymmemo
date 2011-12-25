@@ -1,5 +1,7 @@
 (function() {
-  var createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, debugSelectItems, debugSelectRecords, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2ItemAll, _res2NameValues, _res2RecordAll;
+  var URL, createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, debugSelectItems, debugSelectRecords, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2ItemAll, _res2NameValues, _res2RecordAll;
+
+  URL = 'http://gymm3mo.appspot.com/';
 
   create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)';
 
@@ -221,9 +223,7 @@
       success: function(data, status, xhr) {
         return localStorage['user'] = data;
       },
-      error: function(data, status, xhr) {
-        return location.href = URL + 'hoge';
-      }
+      error: function(data, status, xhr) {}
     });
   };
 
@@ -254,6 +254,7 @@
   };
 
   saveOnServer = function() {
+    console.log('saveOnServer');
     db.transaction(function(tx) {
       return tx.executeSql(select_items_unsaved, [localStorage['user']], function(tx, res) {
         var data, i, len;
@@ -304,10 +305,17 @@
       debugSelectItems();
       return debugSelectRecords();
     });
-    return $('#debug').click(function() {
+    $('#debug').click(function() {
       console.log('debug!');
       $('#clear').toggle();
-      return $('#showdb').toggle();
+      $('#showdb').toggle();
+      return $('#save').toggle();
+    });
+    $('#save').click(function() {
+      return saveOnServer();
+    });
+    return $('#save2').click(function() {
+      return saveOnServer();
     });
   });
 

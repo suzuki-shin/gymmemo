@@ -29,7 +29,7 @@ class Item(db.Model):
     created_at = db.DateTimeProperty(auto_now_add=True)
     user       = db.EmailProperty(required=True)
     name       = db.TextProperty(required=True) # 種目名
-    attr       = db.TextProperty(required=True) # 負荷単位名
+    attr       = db.TextProperty(required=False) # 負荷単位名
     #     is_saved   = db.BooleanProperty(default=True)
 
     @classmethod

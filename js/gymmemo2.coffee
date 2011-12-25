@@ -1,3 +1,5 @@
+URL = 'http://gymm3mo.appspot.com/'
+
 create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)'
 create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT, is_saved INT DEFAULT 0)'
 select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DESC'
@@ -179,7 +181,7 @@ setUser =->
             localStorage['user'] = data
         error: (data, status, xhr) ->
 #             console.log('error')
-            location.href = URL + 'hoge'
+#             location.href = URL + 'hoge'
 #     console.log('setUser end')
 
 reportError = (source, message) ->
@@ -204,7 +206,7 @@ debugSelectRecords =->
 
 
 saveOnServer =->
-#     console.log 'saveOnServer'
+    console.log 'saveOnServer'
     db.transaction (tx) ->
 #         console.log 'tranx saveOnServer'
         tx.executeSql select_items_unsaved,
@@ -250,4 +252,6 @@ $ ->
         console.log 'debug!'
         $('#clear').toggle()
         $('#showdb').toggle()
-#         saveOnServer()
+        $('#save').toggle()
+    $('#save').click -> saveOnServer()
+    $('#save2').click -> saveOnServer()
