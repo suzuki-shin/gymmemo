@@ -52,7 +52,7 @@ class SaveItemAction(SsRequestHandler):
     def post(self):
         params = self.request.POST.items()
         item_list = eval(params[0][0])
-        logging.info(item_list)
+#         logging.info(item_list)
 
         for i in item_list:
             if not i.get('id'): continue
@@ -80,63 +80,40 @@ class SaveItemAction(SsRequestHandler):
             item.put()
         self.redirect('/')
 
-# class RecordTrainningAction(SsRequestHandler):
-#     @login_required
-#     def get(self):
-#         items = Item.all().filter('status =', True).filter('user =', self.user).fetch(100)
-#         path = os.path.join(os.path.dirname(__file__), 'record.html')
-#         self.response.out.write(template.render(path, {'items': items, 'disps':Item.display}))
+class SaveRecordAction(SsRequestHandler):
+    @login_required
+    def post(self):
+        params = self.request.POST.items()
+        logging.info(params)
+        record_list = eval(params[0][0])
+        logging.info(record_list)
+        self.redirect('/')
 
-#     @login_required
-#     def post(self):
-#         for key, value in self.request.POST.items():
-#             if not (key and value): continue
+        for i in record_list:
+            if not i.get('id'): continue
+            if not i.get('user'): continue
+            if not i.get('item_id'): continue
+            record_id = int(i['id'])
+            records = Record.get_by_record_id(record_id, i['user'])
+            if records:
+                record = records[0]
+                self.redirect('/')
+#                 record = records[0]
+#                 logging.info(record.__class__)
+#                 record(
+#                     name = unicode(i['name'], 'utf-8', 'replace'),
+#                     attr = unicode(i['attr'], 'utf-8', 'replace'),
+#                 )
+            else:
+                record = Record(
+                    user      = i['user'],
+                    record_id = record_id,
+                    item_id   = int(i['item_id']),
+                    value     = int(i['value']),
+                )
 
-#             item = Item.get(key)
-#             trainning = Trainning(
-#                 user   = self.user,
-#                 item   = item,
-#                 value  = int(value),
-#             )
-#             trainning.put()
-#         self.redirect('/')
-
-# class ListTrainningAction(SsRequestHandler):
-#     @login_required
-#     def get(self):
-#         days = Trainning.get_days(self.user)
-#         path = os.path.join(os.path.dirname(__file__), 'list.html')
-#         self.response.out.write(template.render(path, {'days': days}))
-
-# class ViewTrainningAction(SsRequestHandler):
-#     @login_required
-#     def get(self):
-#         trainnings = Trainning.get_list_at(self.user, self.request.get('created'))
-#         path = os.path.join(os.path.dirname(__file__), 'view.html')
-#         self.response.out.write(template.render(path, {'trainnings': trainnings}))
-
-# class SetConfigAction(SsRequestHandler):
-#     @login_required
-#     def get(self):
-#         items = Item.all().filter('user =', self.user).fetch(100)
-#         path = os.path.join(os.path.dirname(__file__), 'config.html')
-#         self.response.out.write(template.render(path, {'items': items}))
-
-# class AddItemAction(SsRequestHandler):
-#     @login_required
-#     def get(self):
-#         path = os.path.join(os.path.dirname(__file__), 'add_item.html')
-#         self.response.out.write(template.render(path, {'disps':Item.display}))
-
-#     @login_required
-#     def post(self):
-#         item = Item(
-#             user = self.user,
-#             name = self.request.get('name'),
-#             unit = self.request.get('unit'),
-#         )
-#         item.put()
-#         self.redirect('/config')
+            record.put()
+        self.redirect('/')
 
 class UserInfoAction(SsRequestHandler):
     @login_required
@@ -169,7 +146,7 @@ class UserInfoAction(SsRequestHandler):
 application = webapp.WSGIApplication(
     [('/', IndexAction),
      ('/save_item', SaveItemAction),
-#      ('/save_record', SaveRecordAction),
+     ('/save_record', SaveRecordAction),
 #      ('/record', RecordTrainningAction),
 #      ('/list', ListTrainningAction),
 #      ('/view', ViewTrainningAction),

@@ -47,18 +47,25 @@ class Record(db.Model):
     created_at = db.DateTimeProperty(auto_now_add=True)
     user       = db.EmailProperty(required=True)
     item_id    = db.IntegerProperty(required=True)
+    record_id  = db.IntegerProperty(required=True)
     value      = db.IntegerProperty(required=True)
 #     is_saved   = db.BooleanProperty(default=True)
 
     @classmethod
-    def get_days(cls, user):
-        trainnings = cls.all().filter('status =', True).filter('user =', user).fetch(100)
-        return Set([t.created_at.strftime('%Y-%m-%d') for t in trainnings])
+    def get_by_record_id(cls, record_id, user):
+        records = cls.all().filter('user =', user).filter('record_id =', record_id).fetch(1)
+        logging.info(records)
+        return records
 
-    @classmethod
-    def get_list_at(cls, user, created_at):
-        trainnings = Trainning.all().filter('user =', user)
-        trainnings.filter('created_at >=', datetime(*strptime(created_at + ' 00:00:00', '%Y-%m-%d %H:%M:%S')[0:6]))
-        trainnings.filter('created_at <=', datetime(*strptime(created_at + ' 23:59:59', '%Y-%m-%d %H:%M:%S')[0:6]))
-        trainnings.filter('status =', True)
-        return trainnings
+#     @classmethod
+#     def get_days(cls, user):
+#         trainnings = cls.all().filter('status =', True).filter('user =', user).fetch(100)
+#         return Set([t.created_at.strftime('%Y-%m-%d') for t in trainnings])
+
+#     @classmethod
+#     def get_list_at(cls, user, created_at):
+#         trainnings = Trainning.all().filter('user =', user)
+#         trainnings.filter('created_at >=', datetime(*strptime(created_at + ' 00:00:00', '%Y-%m-%d %H:%M:%S')[0:6]))
+#         trainnings.filter('created_at <=', datetime(*strptime(created_at + ' 23:59:59', '%Y-%m-%d %H:%M:%S')[0:6]))
+#         trainnings.filter('status =', True)
+#         return trainnings

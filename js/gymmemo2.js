@@ -1,5 +1,5 @@
 (function() {
-  var URL, createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, debugSelectItems, debugSelectRecords, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2ItemAll, _res2NameValues, _res2RecordAll;
+  var URL, createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, debugSelectItems, debugSelectRecords, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, update_items_unsaved, update_records_unsaved, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2ItemAll, _res2NameValues, _res2RecordAll;
 
   URL = 'http://gymm3mo.appspot.com/';
 
@@ -25,7 +25,11 @@
 
   select_items_unsaved = 'SELECT id, status, user, name, attr, is_saved FROM items WHERE user = ? AND is_saved = 0 ORDER BY id DESC';
 
+  update_items_unsaved = 'UPDATE items SET is_saved = 1 WHERE user = ? AND is_saved = 0';
+
   select_records_unsaved = 'SELECT * FROM records WHERE user = ? AND is_saved = 0 ORDER BY id DESC';
+
+  update_records_unsaved = 'UPDATE records SET is_saved = 1 WHERE user = ? AND is_saved = 0';
 
   db = window.openDatabase("gymmemo", "", "GYMMEMO", 1048576);
 
@@ -254,9 +258,27 @@
   };
 
   saveOnServer = function() {
+    var _saveItems, _saveRecords, _updateSavedItem, _updateSavedRecord;
     console.log('saveOnServer');
-    db.transaction(function(tx) {
-      return tx.executeSql(select_items_unsaved, [localStorage['user']], function(tx, res) {
+    _updateSavedItem = function() {
+      console.log('_updateSavedItem');
+      return db.transaction(function(tx) {
+        return tx.executeSql(update_items_unsaved, [localStorage['user']], function() {
+          return console.log('success _updateSavedItem');
+        });
+      });
+    };
+    _updateSavedRecord = function() {
+      console.log('_updateSavedRecord');
+      return db.transaction(function(tx) {
+        return tx.executeSql(update_records_unsaved, [localStorage['user']], function() {
+          return console.log('success _updateSavedRecord');
+        });
+      });
+    };
+    _saveRecords = function(tx) {
+      console.log("_saveRecords");
+      return tx.executeSql(select_records_unsaved, [localStorage['user']], function(tx, res) {
         var data, i, len;
         len = res.rows.length;
         data = (function() {
@@ -269,12 +291,35 @@
         })();
         return $.ajax({
           type: 'POST',
-          url: '/save_item',
+          url: '/save_record',
           data: JSON.stringify(data),
-          success: function() {
-            return console.log('save items success');
-          }
+          success: _updateSavedRecord
         });
+      });
+    };
+    _saveItems = function(tx, res) {
+      var data, i, len;
+      console.log('_saveItems');
+      len = res.rows.length;
+      data = (function() {
+        var _results;
+        _results = [];
+        for (i = 0; 0 <= len ? i < len : i > len; 0 <= len ? i++ : i--) {
+          _results.push(res.rows.item(i));
+        }
+        return _results;
+      })();
+      return $.ajax({
+        type: 'POST',
+        url: '/save_item',
+        data: JSON.stringify(data),
+        success: _updateSavedItem
+      });
+    };
+    db.transaction(function(tx) {
+      return tx.executeSql(select_items_unsaved, [localStorage['user']], function(tx, res) {
+        _saveItems(tx, res);
+        return _saveRecords(tx);
       }, reportError);
     });
     return false;

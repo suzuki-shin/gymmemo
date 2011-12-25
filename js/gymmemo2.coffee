@@ -11,7 +11,9 @@ select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id
 insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)'
 select_count_records = 'SELECT COUNT(*) as cnt FROM records'
 select_items_unsaved = 'SELECT id, status, user, name, attr, is_saved FROM items WHERE user = ? AND is_saved = 0 ORDER BY id DESC'
+update_items_unsaved = 'UPDATE items SET is_saved = 1 WHERE user = ? AND is_saved = 0'
 select_records_unsaved = 'SELECT * FROM records WHERE user = ? AND is_saved = 0 ORDER BY id DESC'
+update_records_unsaved = 'UPDATE records SET is_saved = 1 WHERE user = ? AND is_saved = 0'
 
 db = window.openDatabase "gymmemo","","GYMMEMO", 1048576
 
@@ -207,18 +209,58 @@ debugSelectRecords =->
 
 saveOnServer =->
     console.log 'saveOnServer'
-    db.transaction (tx) ->
-#         console.log 'tranx saveOnServer'
-        tx.executeSql select_items_unsaved,
+
+    _updateSavedItem =->
+        console.log '_updateSavedItem'
+        db.transaction (tx) ->
+            tx.executeSql update_items_unsaved,
+                          [localStorage['user']],
+                          -> console.log 'success _updateSavedItem'
+
+    _updateSavedRecord =->
+        console.log '_updateSavedRecord'
+        db.transaction (tx) ->
+            tx.executeSql update_records_unsaved,
+                          [localStorage['user']],
+                          -> console.log 'success _updateSavedRecord'
+
+    _saveRecords = (tx) ->
+        console.log "_saveRecords"
+        tx.executeSql select_records_unsaved,
                       [localStorage['user']],
                       (tx, res) ->
                           len = res.rows.length
                           data = (res.rows.item(i) for i in [0...len])
                           $.ajax
                               type: 'POST'
-                              url: '/save_item'
+                              url: '/save_record'
                               data: JSON.stringify(data)
-                              success: -> console.log 'save items success'
+                              success: _updateSavedRecord
+
+    _saveItems = (tx, res) ->
+        console.log '_saveItems'
+        len = res.rows.length
+        data = (res.rows.item(i) for i in [0...len])
+        $.ajax
+            type: 'POST'
+            url: '/save_item'
+            data: JSON.stringify(data)
+            success: _updateSavedItem
+
+    db.transaction (tx) ->
+        tx.executeSql select_items_unsaved,
+                      [localStorage['user']],
+                      (tx, res) ->
+                          _saveItems(tx, res)
+                          _saveRecords(tx)
+#                       (tx, res) ->
+#                           len = res.rows.length
+#                           data = (res.rows.item(i) for i in [0...len])
+#                           $.ajax
+#                               type: 'POST'
+#                               url: '/save_item'
+#                               data: JSON.stringify(data)
+#                               success: -> console.log 'save items success'
                       reportError
     false
 
