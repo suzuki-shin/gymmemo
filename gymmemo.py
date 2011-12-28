@@ -60,7 +60,7 @@ class SaveItemAction(SsRequestHandler):
             if not i.get('name'): continue
             item_id = int(i['id'])
             items = Item.get_by_item_id(item_id, i['user'])
-            if items[0]:
+            if items:
                 item = items[0]
                 self.redirect('/')
 #                 item = items[0]

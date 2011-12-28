@@ -34,7 +34,7 @@ class Item(db.Model):
 
     @classmethod
     def get_by_item_id(cls, item_id, user):
-        items = Item.all().filter('user =', user).filter('item_id =', item_id).fetch(1)
+        items = cls.all().filter('user =', user).filter('item_id =', item_id).fetch(1)
         logging.info(items)
 #         return items[0] if len(items) > 0 else None
         dir(items)
