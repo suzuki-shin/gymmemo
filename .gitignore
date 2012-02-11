@@ -3,3 +3,4 @@
 TAGS
 index.yaml
 js/jquery.js
+js/node_modules/*
