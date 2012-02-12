@@ -1,17 +1,14 @@
 URL = 'http://gymm3mo.appspot.com/'
 DB_VERSION = 1
 
-DESC = 1
-ASC = 0
+order = [' ASC ', ' DESC ']
 
 create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)'
 create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT, is_saved INT DEFAULT 0)'
 select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DESC'
 select_count_items = 'SELECT COUNT(*) as cnt FROM items'
 insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)'
-select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10'
-select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.created_at DESC LIMIT 10'
-select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC'
+# select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id ' + order[localStorage[' + ' LIMIT 10'
 insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)'
 select_count_records = 'SELECT COUNT(*) as cnt FROM records'
 select_items_unsaved = 'SELECT id, status, user, name, attr, is_saved FROM items WHERE user = ? AND is_saved = 0 ORDER BY id DESC'
@@ -90,6 +87,8 @@ renderRecords =->
     db.transaction _renderRecords, reportError
 
 _renderRecords = (tx) ->
+    config = getConfig()
+    select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id ' + order[config['todays_record_order']]
     tx.executeSql select_records_by_date, [localStorage['user'], 1, getYYYYMMDD()],
                   (tx, res) ->
                       $('#recordlist').empty()
@@ -116,8 +115,10 @@ renderPastRecordsDate =->
     db.transaction _renderPastRecordsDate, reportError
 
 _renderPastRecordsDate = (tx) ->
-#     console.log('_renderPastRecordsDate')
-#     console.log(localStorage['user'])
+    console.log('_renderPastRecordsDate')
+    config = getConfig()
+    select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.created_at ' + order[config['past_record_order']] + ' LIMIT 10'
+    console.log(select_records_date)
     tx.executeSql select_records_date, [localStorage['user'], 1],
                   (tx, res) ->
                       $('#recordsubtitle').text ''
@@ -130,9 +131,9 @@ renderRecordByDate = (event) ->
     date = event.target.textContent
 #     console.log(date)
     _renderRecordByDate = (tx) ->
-#         console.log('_renderRecordByDate')
+        console.log('_renderRecordByDate')
 #         console.log(localStorage['user'])
-#         console.log(date)
+        console.log(select_records_by_date)
         tx.executeSql select_records_by_date, [localStorage['user'], 1, date],
                       (tx, res) ->
                           $('#recordsubtitle').text date
@@ -324,6 +325,18 @@ checkDBversion = (last_db_version) ->
 
         return
 
+toggleOrder =->
+    console.log 'toggleOrder'
+    # 0と1を交換する
+    _transform0_1 =(x)-> Math.abs(x - 1)
+    config = getConfig()
+    config['todays_record_order'] = _transform0_1(config['todays_record_order'])
+    config['past_record_order'] = _transform0_1(config['past_record_order'])
+    console.log config
+    setConfig(config)
+    renderRecords()
+    renderPastRecordsDate()
+
 $ ->
     setUser()
     createConfig() if getConfig?
@@ -341,7 +354,7 @@ $ ->
     $('#pastrecordstitle').click renderPastRecordsDate
     $(document).on 'touchstart', '#pastrecordlist li span', renderRecordByDate
     $('#configtitle').click -> $('#config').toggle()
-
+    $('#orderconfig').click -> toggleOrder()
 
 
     # FOR DEBUG

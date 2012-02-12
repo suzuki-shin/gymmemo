@@ -33,6 +33,12 @@ body {
 	padding: 0;
 }
 
+/* li { */
+/* 	background-color: red; */
+/* 	margin: 0; */
+/* 	padding: 2px; */
+/* } */
+
 #content ul li a{
 	background-color: #000;
 	border: 1px solid #666;

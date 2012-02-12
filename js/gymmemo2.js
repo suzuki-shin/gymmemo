@@ -1,33 +1,21 @@
 (function() {
-  var ASC, DB_VERSION, DESC, URL, checkDBversion, createTableConfigs, createTableItems, createTableRecords, createTables, create_table_configs, create_table_items, create_table_records, db, debugSelectItems, debugSelectRecords, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_config, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, update_items_unsaved, update_records_unsaved, wrapHtmlList, _insertConfig, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2ItemAll, _res2NameValues, _res2RecordAll;
+  var DB_VERSION, URL, checkDBversion, createConfig, createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, debugSelectItems, debugSelectRecords, dropTableItems, dropTableRecords, getConfig, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, order, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records_unsaved, setConfig, setUser, toggleOrder, update_items_unsaved, update_records_unsaved, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2ItemAll, _res2NameValues, _res2RecordAll;
 
   URL = 'http://gymm3mo.appspot.com/';
 
   DB_VERSION = 1;
 
-  DESC = 1;
-
-  ASC = 0;
-
-  create_table_configs = 'CREATE TABLE IF NOT EXISTS configs (user TEXT, db_version INT DEFAULT 0, todays_record_order INT DEFAULT 1, past_record_order INT DEFAULT 1)';
+  order = [' ASC ', ' DESC '];
 
   create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)';
 
   create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT, is_saved INT DEFAULT 0)';
-
-  insert_config = 'INSERT INTO configs (user) VALUES (?)';
 
   select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DESC';
 
   select_count_items = 'SELECT COUNT(*) as cnt FROM items';
 
   insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)';
-
-  select_records = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? ORDER BY r.id DESC LIMIT 10';
-
-  select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.created_at DESC LIMIT 10';
-
-  select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id DESC';
 
   insert_record = 'INSERT INTO records (id, status, user, item_id, value, created_at) VALUES (?, ?, ?, ?, ?, ?)';
 
@@ -43,16 +31,26 @@
 
   db = window.openDatabase("gymmemo", "", "GYMMEMO", 1048576);
 
-  createTableConfigs = function(tx) {
-    console.log('createTableConfigs');
-    return tx.executeSql(create_table_configs, [], _insertConfig);
+  getConfig = function() {
+    console.log('getConfig');
+    return JSON.parse(localStorage['config']);
   };
 
-  _insertConfig = function(tx, res) {
-    console.log('_insertConfig');
-    return tx.executeSql(insert_config, [localStorage['user']], function(tx, res) {
-      return '';
-    }, reportError);
+  setConfig = function(json) {
+    console.log('setConfig');
+    return localStorage['config'] = JSON.stringify(json);
+  };
+
+  createConfig = function() {
+    console.log('createConfig');
+    if (localStorage['config'] != null) return;
+    console.log('createConfig_');
+    return setConfig({
+      db_version: 0,
+      localstrage_version: 0,
+      todays_record_order: 1,
+      past_record_order: 1
+    });
   };
 
   dropTableItems = function() {
@@ -121,6 +119,9 @@
   };
 
   _renderRecords = function(tx) {
+    var config, select_records_by_date;
+    config = getConfig();
+    select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id ' + order[config['todays_record_order']];
     return tx.executeSql(select_records_by_date, [localStorage['user'], 1, getYYYYMMDD()], function(tx, res) {
       return $('#recordlist').empty().append(wrapHtmlList(_res2NameValues(res), 'li').join(''));
     }, reportError);
@@ -171,6 +172,11 @@
   };
 
   _renderPastRecordsDate = function(tx) {
+    var config, select_records_date;
+    console.log('_renderPastRecordsDate');
+    config = getConfig();
+    select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.created_at ' + order[config['past_record_order']] + ' LIMIT 10';
+    console.log(select_records_date);
     return tx.executeSql(select_records_date, [localStorage['user'], 1], function(tx, res) {
       $('#recordsubtitle').text('');
       return $('#pastrecordlist').empty().append(wrapHtmlList(_res2Date(res), 'li').join(''));
@@ -181,6 +187,8 @@
     var date, _renderRecordByDate;
     date = event.target.textContent;
     _renderRecordByDate = function(tx) {
+      console.log('_renderRecordByDate');
+      console.log(select_records_by_date);
       return tx.executeSql(select_records_by_date, [localStorage['user'], 1, date], function(tx, res) {
         $('#recordsubtitle').text(date);
         return $('#pastrecordlist').empty().append(wrapHtmlList(_res2NameValues(res), 'li').join(''));
@@ -257,7 +265,6 @@
   createTables = function() {
     console.log('createTables');
     return db.transaction(function(tx) {
-      createTableConfigs(tx);
       createTableItems(tx);
       return createTableRecords(tx);
     });
@@ -348,28 +355,26 @@
   };
 
   checkDBversion = function(last_db_version) {
-    var _updateSchema;
+    var config, _updateSchema;
     console.log('checkDBversion');
-    db.transaction(function(tx) {
-      return tx.executeSql('SELECT db_version FROM configs', [], function(tx, res) {
-        var current_db_version;
-        current_db_version = res.rows.len > 1 ? res.rows.item(0).db_version : 0;
-        while (current_db_version < last_db_version) {
-          console.log('current_db_version: ' + current_db_version);
-          _updateSchema(tx, current_db_version);
-          current_db_version++;
-          console.log('current_db_version: ' + current_db_version);
-        }
-        return console.log(current_db_version + ':' + last_db_version);
+    config = getConfig();
+    config['db_version'] || (config['db_version'] = 0);
+    console.log('db_version: ' + config['db_version']);
+    while (config['db_version'] < last_db_version) {
+      console.log('current_db_version: ' + current_db_version);
+      db.transaction(function(tx) {
+        return _updateSchema(tx, current_db_version);
       });
-    });
+      config['db_version']++;
+      console.log('current_db_version: ' + config['db_version']);
+    }
+    setConfig(config);
     return _updateSchema = function(tx, current_db_version) {
       var _updateSchema1, _updateSchema2;
       console.log('_updateSchema');
       _updateSchema1 = function(tx) {
-        var update_db_version;
         console.log('_updateSchema1');
-        update_db_version = 'UPDATE configs SET db_version = ?';
+        createTables();
         return tx.executeSql(update_db_version, [current_db_version + 1]);
       };
       _updateSchema2 = function(tx) {
@@ -386,9 +391,24 @@
     };
   };
 
+  toggleOrder = function() {
+    var config, _transform0_1;
+    console.log('toggleOrder');
+    _transform0_1 = function(x) {
+      return Math.abs(x - 1);
+    };
+    config = getConfig();
+    config['todays_record_order'] = _transform0_1(config['todays_record_order']);
+    config['past_record_order'] = _transform0_1(config['past_record_order']);
+    console.log(config);
+    setConfig(config);
+    renderRecords();
+    return renderPastRecordsDate();
+  };
+
   $(function() {
     setUser();
-    createTables();
+    if (getConfig != null) createConfig();
     checkDBversion(DB_VERSION);
     renderItems();
     renderRecords();
@@ -400,6 +420,12 @@
     $(document).on('change', '#itemlist li input', insertRecord);
     $('#pastrecordstitle').click(renderPastRecordsDate);
     $(document).on('touchstart', '#pastrecordlist li span', renderRecordByDate);
+    $('#configtitle').click(function() {
+      return $('#config').toggle();
+    });
+    $('#orderconfig').click(function() {
+      return toggleOrder();
+    });
     $('#clear').click(function() {
       dropTableItems();
       return dropTableRecords();
@@ -414,6 +440,7 @@
     });
     $('#debug').click(function() {
       console.log('debug!');
+      console.log(getConfig());
       $('#clear').toggle();
       $('#showdb').toggle();
       return $('#save').toggle();
