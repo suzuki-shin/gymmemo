@@ -1,11 +1,21 @@
 (function() {
-  var URL, createTableItems, createTableRecords, createTables, create_table_items, create_table_records, db, debugSelectItems, debugSelectRecords, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, update_items_unsaved, update_records_unsaved, wrapHtmlList, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2ItemAll, _res2NameValues, _res2RecordAll;
+  var ASC, DB_VERSION, DESC, URL, checkDBversion, createTableConfigs, createTableItems, createTableRecords, createTables, create_table_configs, create_table_items, create_table_records, db, debugSelectItems, debugSelectRecords, dropTableItems, dropTableRecords, getYYYYMMDD, insertItem, insertRecord, insert_config, insert_item, insert_record, renderItems, renderPastRecordsDate, renderRecordByDate, renderRecords, reportError, saveOnServer, select_count_items, select_count_records, select_items, select_items_unsaved, select_records, select_records_by_date, select_records_date, select_records_unsaved, setUser, update_items_unsaved, update_records_unsaved, wrapHtmlList, _insertConfig, _insertItem, _insertRecord, _renderItems, _renderPastRecordsDate, _renderRecords, _res2Date, _res2ItemAll, _res2NameValues, _res2RecordAll;
 
   URL = 'http://gymm3mo.appspot.com/';
+
+  DB_VERSION = 1;
+
+  DESC = 1;
+
+  ASC = 0;
+
+  create_table_configs = 'CREATE TABLE IF NOT EXISTS configs (user TEXT, db_version INT DEFAULT 0, todays_record_order INT DEFAULT 1, past_record_order INT DEFAULT 1)';
 
   create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)';
 
   create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT, is_saved INT DEFAULT 0)';
+
+  insert_config = 'INSERT INTO configs (user) VALUES (?)';
 
   select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DESC';
 
@@ -33,6 +43,18 @@
 
   db = window.openDatabase("gymmemo", "", "GYMMEMO", 1048576);
 
+  createTableConfigs = function(tx) {
+    console.log('createTableConfigs');
+    return tx.executeSql(create_table_configs, [], _insertConfig);
+  };
+
+  _insertConfig = function(tx, res) {
+    console.log('_insertConfig');
+    return tx.executeSql(insert_config, [localStorage['user']], function(tx, res) {
+      return '';
+    }, reportError);
+  };
+
   dropTableItems = function() {
     if (!confirm('itemsテーブルをdropして良いですか？')) return;
     return db.transaction(function(tx) {
@@ -44,10 +66,8 @@
     });
   };
 
-  createTableItems = function() {
-    return db.transaction(function(tx) {
-      return tx.executeSql(create_table_items, []);
-    });
+  createTableItems = function(tx) {
+    return tx.executeSql(create_table_items, []);
   };
 
   dropTableRecords = function() {
@@ -62,10 +82,8 @@
     });
   };
 
-  createTableRecords = function() {
-    return db.transaction(function(tx) {
-      return tx.executeSql(create_table_records, []);
-    });
+  createTableRecords = function(tx) {
+    return tx.executeSql(create_table_records, []);
   };
 
   wrapHtmlList = function(list, tag) {
@@ -237,8 +255,12 @@
   };
 
   createTables = function() {
-    createTableItems();
-    return createTableRecords();
+    console.log('createTables');
+    return db.transaction(function(tx) {
+      createTableConfigs(tx);
+      createTableItems(tx);
+      return createTableRecords(tx);
+    });
   };
 
   debugSelectItems = function() {
@@ -325,9 +347,49 @@
     return false;
   };
 
+  checkDBversion = function(last_db_version) {
+    var _updateSchema;
+    console.log('checkDBversion');
+    db.transaction(function(tx) {
+      return tx.executeSql('SELECT db_version FROM configs', [], function(tx, res) {
+        var current_db_version;
+        current_db_version = res.rows.len > 1 ? res.rows.item(0).db_version : 0;
+        while (current_db_version < last_db_version) {
+          console.log('current_db_version: ' + current_db_version);
+          _updateSchema(tx, current_db_version);
+          current_db_version++;
+          console.log('current_db_version: ' + current_db_version);
+        }
+        return console.log(current_db_version + ':' + last_db_version);
+      });
+    });
+    return _updateSchema = function(tx, current_db_version) {
+      var _updateSchema1, _updateSchema2;
+      console.log('_updateSchema');
+      _updateSchema1 = function(tx) {
+        var update_db_version;
+        console.log('_updateSchema1');
+        update_db_version = 'UPDATE configs SET db_version = ?';
+        return tx.executeSql(update_db_version, [current_db_version + 1]);
+      };
+      _updateSchema2 = function(tx) {
+        return console.log('_updateSchema2 まだ中身なし');
+      };
+      switch (current_db_version) {
+        case 0:
+          console.log('current_db_version: ' + current_db_version);
+          _updateSchema1(tx);
+          break;
+        default:
+          console.log('else');
+      }
+    };
+  };
+
   $(function() {
-    createTables();
     setUser();
+    createTables();
+    checkDBversion(DB_VERSION);
     renderItems();
     renderRecords();
     renderPastRecordsDate();
