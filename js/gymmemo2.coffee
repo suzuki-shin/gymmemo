@@ -4,10 +4,8 @@ DB_VERSION = 1
 DESC = 1
 ASC = 0
 
-create_table_configs = 'CREATE TABLE IF NOT EXISTS configs (user TEXT, db_version INT DEFAULT 0, todays_record_order INT DEFAULT 1, past_record_order INT DEFAULT 1)'
 create_table_items = 'CREATE TABLE IF NOT EXISTS items (id INT, status INT, user TEXT, name TEXT, attr TEXT, is_saved INT DEFAULT 0)'
 create_table_records = 'CREATE TABLE IF NOT EXISTS records (id INT, status INT, user TEXT, item_id INT, value INT, created_at TEXT, is_saved INT DEFAULT 0)'
-insert_config = 'INSERT INTO configs (user) VALUES (?)'
 select_items = 'SELECT * FROM items WHERE user = ? AND status = ? ORDER BY id DESC'
 select_count_items = 'SELECT COUNT(*) as cnt FROM items'
 insert_item = 'INSERT INTO items (id, status, user, name, attr) VALUES (?, ?, ?, ?, ?)'
@@ -23,16 +21,25 @@ update_records_unsaved = 'UPDATE records SET is_saved = 1 WHERE user = ? AND is_
 
 db = window.openDatabase "gymmemo","","GYMMEMO", 1048576
 
-createTableConfigs = (tx) ->
-    console.log 'createTableConfigs'
-    tx.executeSql create_table_configs, [], _insertConfig
+getConfig =->
+    console.log 'getConfig'
+    JSON.parse(localStorage['config'])
 
-	_insertConfig = (tx, res) ->
-        console.log '_insertConfig'
-        tx.executeSql insert_config, [localStorage['user']],
-                      (tx, res) -> ''
-                      reportError
+setConfig =(json)->
+    console.log 'setConfig'
+    # あとでパラメタのバリデーションを作る
+    localStorage['config'] = JSON.stringify(json)
 
+createConfig =->
+    console.log 'createConfig'
+    return if localStorage['config']?
+    console.log 'createConfig_'
+    setConfig(
+        db_version: 0
+        localstrage_version: 0
+        todays_record_order: 1
+        past_record_order: 1
+    )
 
 dropTableItems =->
     if not confirm 'itemsテーブルをdropして良いですか？'
@@ -208,7 +215,6 @@ reportError = (source, message) ->
 createTables =->
     console.log 'createTables'
     db.transaction (tx) ->
-        createTableConfigs(tx)
         createTableItems(tx)
         createTableRecords(tx)
 
@@ -285,17 +291,16 @@ saveOnServer =->
 
 checkDBversion = (last_db_version) ->
     console.log 'checkDBversion'
-    db.transaction (tx) ->
-        tx.executeSql 'SELECT db_version FROM configs',
-                      [],
-                      (tx, res) ->
-                          current_db_version = if res.rows.len > 1 then  res.rows.item(0).db_version else 0
-                          while current_db_version < last_db_version
-                              console.log 'current_db_version: ' + current_db_version
-                              _updateSchema(tx, current_db_version)
-                              current_db_version++
-                              console.log 'current_db_version: ' + current_db_version
-                          console.log(current_db_version + ':' + last_db_version)
+    config = getConfig()
+    config['db_version'] or= 0
+    console.log 'db_version: ' + config['db_version']
+    while config['db_version'] < last_db_version
+        console.log 'current_db_version: ' + current_db_version
+        db.transaction (tx) -> _updateSchema(tx, current_db_version)
+        config['db_version']++
+        console.log 'current_db_version: ' + config['db_version']
+
+    setConfig(config)
 
     _updateSchema = (tx, current_db_version) ->
         console.log '_updateSchema'
@@ -303,7 +308,7 @@ checkDBversion = (last_db_version) ->
         # version0から1への変更
         _updateSchema1 = (tx) ->
             console.log '_updateSchema1'
-            update_db_version = 'UPDATE configs SET db_version = ?'
+            createTables()
             tx.executeSql update_db_version, [current_db_version + 1]
 
         # version1から2への変更
@@ -321,7 +326,7 @@ checkDBversion = (last_db_version) ->
 
 $ ->
     setUser()
-    createTables()
+    createConfig() if getConfig?
     checkDBversion(DB_VERSION)
 
     # render
@@ -335,6 +340,9 @@ $ ->
     $(document).on 'change', '#itemlist li input', insertRecord
     $('#pastrecordstitle').click renderPastRecordsDate
     $(document).on 'touchstart', '#pastrecordlist li span', renderRecordByDate
+    $('#configtitle').click -> $('#config').toggle()
+
+
 
     # FOR DEBUG
     $('#clear').click ->
@@ -348,6 +356,13 @@ $ ->
         debugSelectRecords()
     $('#debug').click ->
         console.log 'debug!'
+        console.log getConfig()
+#         setConfig(
+#             db_version: 1
+#             localstrage_version: 0
+#             todays_record_order: 1
+#             past_record_order: 1
+#         )
         $('#clear').toggle()
         $('#showdb').toggle()
         $('#save').toggle()
