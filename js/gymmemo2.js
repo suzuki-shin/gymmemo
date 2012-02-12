@@ -32,19 +32,15 @@
   db = window.openDatabase("gymmemo", "", "GYMMEMO", 1048576);
 
   getConfig = function() {
-    console.log('getConfig');
     return JSON.parse(localStorage['config']);
   };
 
   setConfig = function(json) {
-    console.log('setConfig');
     return localStorage['config'] = JSON.stringify(json);
   };
 
   createConfig = function() {
-    console.log('createConfig');
     if (localStorage['config'] != null) return;
-    console.log('createConfig_');
     return setConfig({
       db_version: 0,
       localstrage_version: 0,
@@ -176,7 +172,6 @@
     console.log('_renderPastRecordsDate');
     config = getConfig();
     select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.created_at ' + order[config['past_record_order']] + ' LIMIT 10';
-    console.log(select_records_date);
     return tx.executeSql(select_records_date, [localStorage['user'], 1], function(tx, res) {
       $('#recordsubtitle').text('');
       return $('#pastrecordlist').empty().append(wrapHtmlList(_res2Date(res), 'li').join(''));
@@ -187,8 +182,10 @@
     var date, _renderRecordByDate;
     date = event.target.textContent;
     _renderRecordByDate = function(tx) {
+      var config, select_records_by_date;
       console.log('_renderRecordByDate');
-      console.log(select_records_by_date);
+      config = getConfig();
+      select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id ' + order[config['todays_record_order']];
       return tx.executeSql(select_records_by_date, [localStorage['user'], 1, date], function(tx, res) {
         $('#recordsubtitle').text(date);
         return $('#pastrecordlist').empty().append(wrapHtmlList(_res2NameValues(res), 'li').join(''));
@@ -263,7 +260,6 @@
   };
 
   createTables = function() {
-    console.log('createTables');
     return db.transaction(function(tx) {
       createTableItems(tx);
       return createTableRecords(tx);
@@ -288,9 +284,7 @@
 
   saveOnServer = function() {
     var _saveItems, _saveRecords, _updateSavedItem, _updateSavedRecord;
-    console.log('saveOnServer');
     _updateSavedItem = function() {
-      console.log('_updateSavedItem');
       return db.transaction(function(tx) {
         return tx.executeSql(update_items_unsaved, [localStorage['user']], function() {
           return console.log('success _updateSavedItem');
@@ -298,7 +292,6 @@
       });
     };
     _updateSavedRecord = function() {
-      console.log('_updateSavedRecord');
       return db.transaction(function(tx) {
         return tx.executeSql(update_records_unsaved, [localStorage['user']], function() {
           return console.log('success _updateSavedRecord');
@@ -306,7 +299,6 @@
       });
     };
     _saveRecords = function(tx) {
-      console.log("_saveRecords");
       return tx.executeSql(select_records_unsaved, [localStorage['user']], function(tx, res) {
         var data, i, len;
         len = res.rows.length;
@@ -328,7 +320,6 @@
     };
     _saveItems = function(tx, res) {
       var data, i, len;
-      console.log('_saveItems');
       len = res.rows.length;
       data = (function() {
         var _results;
@@ -356,24 +347,18 @@
 
   checkDBversion = function(last_db_version) {
     var config, _updateSchema;
-    console.log('checkDBversion');
     config = getConfig();
     config['db_version'] || (config['db_version'] = 0);
-    console.log('db_version: ' + config['db_version']);
     while (config['db_version'] < last_db_version) {
-      console.log('current_db_version: ' + current_db_version);
       db.transaction(function(tx) {
-        return _updateSchema(tx, current_db_version);
+        return _updateSchema(tx, config['db_version']);
       });
       config['db_version']++;
-      console.log('current_db_version: ' + config['db_version']);
     }
     setConfig(config);
     return _updateSchema = function(tx, current_db_version) {
       var _updateSchema1, _updateSchema2;
-      console.log('_updateSchema');
       _updateSchema1 = function(tx) {
-        console.log('_updateSchema1');
         createTables();
         return tx.executeSql(update_db_version, [current_db_version + 1]);
       };
@@ -382,7 +367,6 @@
       };
       switch (current_db_version) {
         case 0:
-          console.log('current_db_version: ' + current_db_version);
           _updateSchema1(tx);
           break;
         default:
@@ -393,14 +377,12 @@
 
   toggleOrder = function() {
     var config, _transform0_1;
-    console.log('toggleOrder');
     _transform0_1 = function(x) {
       return Math.abs(x - 1);
     };
     config = getConfig();
     config['todays_record_order'] = _transform0_1(config['todays_record_order']);
     config['past_record_order'] = _transform0_1(config['past_record_order']);
-    console.log(config);
     setConfig(config);
     renderRecords();
     return renderPastRecordsDate();
@@ -420,6 +402,7 @@
     $(document).on('change', '#itemlist li input', insertRecord);
     $('#pastrecordstitle').click(renderPastRecordsDate);
     $(document).on('touchstart', '#pastrecordlist li span', renderRecordByDate);
+    $(document).on('click', '#pastrecordlist li span', renderRecordByDate);
     $('#configtitle').click(function() {
       return $('#config').toggle();
     });

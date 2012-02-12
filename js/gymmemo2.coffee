@@ -19,18 +19,18 @@ update_records_unsaved = 'UPDATE records SET is_saved = 1 WHERE user = ? AND is_
 db = window.openDatabase "gymmemo","","GYMMEMO", 1048576
 
 getConfig =->
-    console.log 'getConfig'
+#     console.log 'getConfig'
     JSON.parse(localStorage['config'])
 
 setConfig =(json)->
-    console.log 'setConfig'
-    # あとでパラメタのバリデーションを作る
+#     console.log 'setConfig'
+    # TODO: あとでパラメタのバリデーションを作る
     localStorage['config'] = JSON.stringify(json)
 
 createConfig =->
-    console.log 'createConfig'
+#     console.log 'createConfig'
     return if localStorage['config']?
-    console.log 'createConfig_'
+#     console.log 'createConfig_'
     setConfig(
         db_version: 0
         localstrage_version: 0
@@ -118,7 +118,7 @@ _renderPastRecordsDate = (tx) ->
     console.log('_renderPastRecordsDate')
     config = getConfig()
     select_records_date = 'SELECT created_at FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? GROUP BY r.created_at ORDER BY r.created_at ' + order[config['past_record_order']] + ' LIMIT 10'
-    console.log(select_records_date)
+#     console.log(select_records_date)
     tx.executeSql select_records_date, [localStorage['user'], 1],
                   (tx, res) ->
                       $('#recordsubtitle').text ''
@@ -133,7 +133,9 @@ renderRecordByDate = (event) ->
     _renderRecordByDate = (tx) ->
         console.log('_renderRecordByDate')
 #         console.log(localStorage['user'])
-        console.log(select_records_by_date)
+        config = getConfig()
+        select_records_by_date = 'SELECT * FROM records r LEFT JOIN items i ON r.item_id = i.id WHERE r.user = ? AND r.status = ? AND r.created_at = ? ORDER BY r.id ' + order[config['todays_record_order']]
+#         console.log(select_records_by_date)
         tx.executeSql select_records_by_date, [localStorage['user'], 1, date],
                       (tx, res) ->
                           $('#recordsubtitle').text date
@@ -214,7 +216,7 @@ reportError = (source, message) ->
     console.log message
 
 createTables =->
-    console.log 'createTables'
+#     console.log 'createTables'
     db.transaction (tx) ->
         createTableItems(tx)
         createTableRecords(tx)
@@ -233,24 +235,24 @@ debugSelectRecords =->
 
 
 saveOnServer =->
-    console.log 'saveOnServer'
+#     console.log 'saveOnServer'
 
     _updateSavedItem =->
-        console.log '_updateSavedItem'
+#         console.log '_updateSavedItem'
         db.transaction (tx) ->
             tx.executeSql update_items_unsaved,
                           [localStorage['user']],
                           -> console.log 'success _updateSavedItem'
 
     _updateSavedRecord =->
-        console.log '_updateSavedRecord'
+#         console.log '_updateSavedRecord'
         db.transaction (tx) ->
             tx.executeSql update_records_unsaved,
                           [localStorage['user']],
                           -> console.log 'success _updateSavedRecord'
 
     _saveRecords = (tx) ->
-        console.log "_saveRecords"
+#         console.log "_saveRecords"
         tx.executeSql select_records_unsaved,
                       [localStorage['user']],
                       (tx, res) ->
@@ -263,7 +265,7 @@ saveOnServer =->
                               success: _updateSavedRecord
 
     _saveItems = (tx, res) ->
-        console.log '_saveItems'
+#         console.log '_saveItems'
         len = res.rows.length
         data = (res.rows.item(i) for i in [0...len])
         $.ajax
@@ -291,24 +293,24 @@ saveOnServer =->
     false
 
 checkDBversion = (last_db_version) ->
-    console.log 'checkDBversion'
+#     console.log 'checkDBversion'
     config = getConfig()
     config['db_version'] or= 0
-    console.log 'db_version: ' + config['db_version']
+#     console.log 'db_version: ' + config['db_version']
     while config['db_version'] < last_db_version
-        console.log 'current_db_version: ' + current_db_version
-        db.transaction (tx) -> _updateSchema(tx, current_db_version)
+#         console.log 'current_db_version: ' + config['db_version']
+        db.transaction (tx) -> _updateSchema(tx, config['db_version'])
         config['db_version']++
-        console.log 'current_db_version: ' + config['db_version']
+#         console.log 'current_db_version: ' + config['db_version']
 
     setConfig(config)
 
     _updateSchema = (tx, current_db_version) ->
-        console.log '_updateSchema'
+#         console.log '_updateSchema'
 
         # version0から1への変更
         _updateSchema1 = (tx) ->
-            console.log '_updateSchema1'
+#             console.log '_updateSchema1'
             createTables()
             tx.executeSql update_db_version, [current_db_version + 1]
 
@@ -318,7 +320,7 @@ checkDBversion = (last_db_version) ->
 
         switch current_db_version
             when 0
-                console.log 'current_db_version: '+ current_db_version
+#                 console.log 'current_db_version: '+ current_db_version
                 _updateSchema1(tx)
             else
                 console.log 'else'
@@ -326,13 +328,13 @@ checkDBversion = (last_db_version) ->
         return
 
 toggleOrder =->
-    console.log 'toggleOrder'
+#     console.log 'toggleOrder'
     # 0と1を交換する
     _transform0_1 =(x)-> Math.abs(x - 1)
     config = getConfig()
     config['todays_record_order'] = _transform0_1(config['todays_record_order'])
     config['past_record_order'] = _transform0_1(config['past_record_order'])
-    console.log config
+#     console.log config
     setConfig(config)
     renderRecords()
     renderPastRecordsDate()
@@ -353,6 +355,7 @@ $ ->
     $(document).on 'change', '#itemlist li input', insertRecord
     $('#pastrecordstitle').click renderPastRecordsDate
     $(document).on 'touchstart', '#pastrecordlist li span', renderRecordByDate
+    $(document).on 'click', '#pastrecordlist li span', renderRecordByDate # pcデバッグ用
     $('#configtitle').click -> $('#config').toggle()
     $('#orderconfig').click -> toggleOrder()
 
@@ -371,7 +374,7 @@ $ ->
         console.log 'debug!'
         console.log getConfig()
 #         setConfig(
-#             db_version: 1
+#             db_version: 0
 #             localstrage_version: 0
 #             todays_record_order: 1
 #             past_record_order: 1
